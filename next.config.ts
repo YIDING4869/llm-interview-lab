@@ -4,7 +4,7 @@ const isGitHubPages = process.env.GITHUB_ACTIONS === 'true';
 
 const nextConfig: NextConfig = {
   output: 'export',
-  trailingSlash: true,
+  trailingSlash: false,
   assetPrefix: isGitHubPages ? '/llm-interview-lab/' : '',
 };
 

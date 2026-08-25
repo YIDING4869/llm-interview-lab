@@ -36,6 +36,7 @@ jobs:
       - name: Build static client
         env:
           NEXT_PUBLIC_SITE_URL: https://yiding4869.github.io/llm-interview-lab/
+          NEXT_PUBLIC_BASE_PATH: /llm-interview-lab
         run: npm run build
 
       - name: Prepare Pages artifact

@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { SiteFooter } from '../components/SiteFooter';
+import { SiteHeader } from '../components/SiteHeader';
+import { entryRoutes } from '../data/curriculum';
+import { sitePath } from '../lib/site-path';
 
 type Question = {
   id: number;
@@ -156,20 +160,7 @@ export default function Home() {
 
   return (
     <main>
-      <nav className="topbar" aria-label="主导航">
-        <a className="brand" href="#top" aria-label="LLM Interview Lab 首页">
-          <span className="brand-mark">L</span>
-          <span>LLM Interview Lab</span>
-        </a>
-        <div className="nav-links">
-          <a href="#roadmap">学习路线</a>
-          <a href="#question-bank">面试题</a>
-          <a href="#labs">可视化</a>
-          <a href="#notes">Notes</a>
-          <a href="#resources">资源</a>
-        </div>
-        <a className="nav-cta" href="#practice">开始练习 <span>↗</span></a>
-      </nav>
+      <SiteHeader active="home" />
 
       <section className="hero" id="top">
         <div className="hero-copy">
@@ -183,9 +174,9 @@ export default function Home() {
             <a className="text-button" href="#roadmap">查看完整路线 <span>↓</span></a>
           </div>
           <dl className="hero-stats">
-            <div><dt>06</dt><dd>岗位路线</dd></div>
-            <div><dt>80+</dt><dd>精编问题目标</dd></div>
-            <div><dt>04</dt><dd>交互实验目标</dd></div>
+            <div><dt>03</dt><dd>背景入口</dd></div>
+            <div><dt>14</dt><dd>知识模块</dd></div>
+            <div><dt>06</dt><dd>精编面试题</dd></div>
           </dl>
         </div>
 
@@ -208,14 +199,31 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="home-entry-section">
+        <div className="home-entry-head">
+          <div><p className="section-kicker">START FROM WHERE YOU ARE</p><h2>零基础、转码和 ML 背景，不应该拿到同一张书单。</h2></div>
+          <a href={sitePath('/learn/')}>打开完整学习地图 <span>→</span></a>
+        </div>
+        <div className="home-entry-grid">
+          {entryRoutes.map((route, index) => (
+            <a className={`home-entry-card route-${route.color}`} href={sitePath('/learn/#entry-routes')} key={route.id}>
+              <div><span>{(index + 1).toString().padStart(2, '0')}</span><span>{route.label}</span></div>
+              <h3>{route.title}</h3>
+              <p>{route.audience}</p>
+              <strong>{route.duration} <b>↗</b></strong>
+            </a>
+          ))}
+        </div>
+      </section>
+
       <section className="roadmap-section section" id="roadmap">
         <div className="section-head">
-          <div><p className="section-kicker">01 / ROLE-BASED ROADMAPS</p><h2>按岗位学习，建立能被追问的知识结构。</h2></div>
-          <p>每条路线从基础概念延伸到系统取舍与项目问题。先掌握共同基础，再按目标岗位深入。</p>
+          <div><p className="section-kicker">01 / THE KNOWLEDGE SKELETON</p><h2>先看完整骨架，再选择岗位分支。</h2></div>
+          <p>基础、模型和评测是共同主干；后训练、推理、Agent 与机制研究按岗位深入。每个模块都有前置知识、阶段产物和面试能力。</p>
         </div>
         <div className="roadmap-grid">
           {roadmaps.map((roadmap) => (
-            <a className={`roadmap-card tone-${roadmap.tone}`} href="#question-bank" key={roadmap.index}>
+            <a className={`roadmap-card tone-${roadmap.tone}`} href={sitePath('/learn/')} key={roadmap.index}>
               <div className="roadmap-top"><span>{roadmap.index}</span><span>{roadmap.count}</span></div>
               <div className="roadmap-symbol" aria-hidden="true">{roadmap.index === '01' ? 'QKᵀ' : roadmap.index === '02' ? 'πθ' : roadmap.index === '03' ? '↗↙' : roadmap.index === '04' ? 'KV' : roadmap.index === '05' ? '±' : '∴'}</div>
               <h3>{roadmap.title}</h3>
@@ -307,7 +315,7 @@ export default function Home() {
       <section className="resource-section section" id="resources">
         <div className="section-head">
           <div><p className="section-kicker">05 / CURATED LIBRARY</p><h2>少而可靠的阅读入口。</h2></div>
-          <p>链接指向原始课程、博客或论文。平台提供阅读路线和面试问题，不复制整篇内容。</p>
+          <div className="resource-head-action"><p>链接指向原始课程、博客或论文。平台提供阅读路线和面试问题，不复制整篇内容。</p><a href={sitePath('/resources/')}>浏览完整资源库 →</a></div>
         </div>
         <div className="resource-grid">
           {resources.map((resource, index) => (
@@ -321,11 +329,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer>
-        <div className="footer-brand"><span className="brand-mark">L</span><strong>LLM Interview Lab</strong></div>
-        <p>Learn deeply. Explain clearly. Defend your decisions.</p>
-        <a href="#top">回到顶部 ↑</a>
-      </footer>
+      <SiteFooter />
     </main>
   );
 }
