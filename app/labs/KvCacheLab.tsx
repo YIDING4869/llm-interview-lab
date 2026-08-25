@@ -14,7 +14,7 @@ export function KvCacheLab() {
   return (
     <section className="standalone-lab kv-full-lab" aria-labelledby="kv-lab-title">
       <div className="standalone-lab-head">
-        <div><span>LAB 01 / INFERENCE SYSTEMS</span><h2 id="kv-lab-title">KV Cache Calculator</h2><p>估算 FP16 KV Cache 容量，观察上下文、batch、层数和 KV heads 的线性关系。结果不包含权重、激活与运行时开销。</p></div>
+        <div><span>LAB 06 / INFERENCE SYSTEMS</span><h2 id="kv-lab-title">KV Cache Calculator</h2><p>估算 FP16 KV Cache 容量，观察上下文、batch、层数和 KV heads 的线性关系。结果不包含权重、激活与运行时开销。</p></div>
         <div className="lab-live-metrics" aria-live="polite"><div><strong>{memoryGb < 1 ? `${(memoryGb * 1024).toFixed(0)} MB` : `${memoryGb.toFixed(2)} GB`}</strong><span>KV MEMORY</span></div><div><strong>{(mhaMemoryGb / Math.max(memoryGb, .0001)).toFixed(1)}×</strong><span>MHA / CURRENT</span></div></div>
       </div>
       <div className="kv-full-grid">

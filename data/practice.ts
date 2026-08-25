@@ -52,6 +52,7 @@ export const practiceQuestions: PracticeQuestion[] = [
     task: { title: '损失与指标对照实验', brief: '构造两组 argmax 相同但概率不同的预测，比较交叉熵与准确率。', steps: ['手算一组二分类样本', '用代码验证结果', '增加一个高置信错误并解释影响'], evidence: '计算表、代码和三句话结论。' },
     notePrompt: '我能否从目标函数解释模型在奖励什么，而不只背指标定义？',
     resourceIds: ['d2l-zh'],
+    labHref: '/labs/?lab=gradient',
   },
   {
     id: 3,
@@ -98,6 +99,7 @@ export const practiceQuestions: PracticeQuestion[] = [
     task: { title: 'Attention shape trace', brief: '实现单头 scaled dot-product attention，并打印每一步形状。', steps: ['验证 causal mask 生效', '比较有无缩放时的 attention entropy', '为一个小输入手工解释注意力矩阵'], evidence: '代码、形状记录和 entropy 对比。' },
     notePrompt: '我能否从输入张量一路讲到输出，而不是只列出 Q、K、V 三个名词？',
     resourceIds: ['nn-zero-to-hero', 'cs336'],
+    labHref: '/labs/?lab=attention',
   },
   {
     id: 6,

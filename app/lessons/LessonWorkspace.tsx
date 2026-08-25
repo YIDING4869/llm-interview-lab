@@ -13,6 +13,8 @@ const lessonStorageKey = 'llm-interview-lab-lesson-progress-v1';
 export function LessonWorkspace() {
   const [activeLessonId, setActiveLessonId] = useState(foundationLessons[0].id);
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
+  const [checkpointSelections, setCheckpointSelections] = useState<Record<string, number>>({});
+  const [checkpointChecks, setCheckpointChecks] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -38,6 +40,9 @@ export function LessonWorkspace() {
   const activeIndex = foundationLessons.findIndex((lesson) => lesson.id === activeLesson.id);
   const nextLesson = foundationLessons[activeIndex + 1];
   const finishedCount = foundationLessons.filter((lesson) => completed[lesson.id]).length;
+  const selectedCheckpointOption = checkpointSelections[activeLesson.id];
+  const checkpointChecked = Boolean(checkpointChecks[activeLesson.id]);
+  const checkpointCorrect = checkpointChecked && selectedCheckpointOption === activeLesson.checkpoint.correctIndex;
   const moduleQuestion = practiceQuestions.find((question) => question.moduleId === activeLesson.moduleId);
   const moduleResources = useMemo(
     () => learningResources.filter((resource) => moduleQuestion?.resourceIds.includes(resource.id)).slice(0, 3),
@@ -51,6 +56,19 @@ export function LessonWorkspace() {
     url.searchParams.set('lesson', lessonId);
     window.history.replaceState({}, '', url);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function selectCheckpointOption(optionIndex: number) {
+    setCheckpointSelections((current) => ({ ...current, [activeLesson.id]: optionIndex }));
+    setCheckpointChecks((current) => ({ ...current, [activeLesson.id]: false }));
+  }
+
+  function checkCheckpoint() {
+    if (selectedCheckpointOption === undefined) return;
+    setCheckpointChecks((current) => ({ ...current, [activeLesson.id]: true }));
+    if (selectedCheckpointOption === activeLesson.checkpoint.correctIndex) {
+      setCompleted((current) => ({ ...current, [activeLesson.id]: true }));
+    }
   }
 
   return (
@@ -97,10 +115,22 @@ export function LessonWorkspace() {
             ))}
 
             <section className="lesson-checkpoint">
-              <div><span>CHECKPOINT</span><strong>先用自己的话回答，再展开答案。</strong></div>
+              <div><span>CHECKPOINT</span><strong>选择答案，提交后查看解释。</strong></div>
               <h3>{activeLesson.checkpoint.question}</h3>
               <p><b>提示：</b>{activeLesson.checkpoint.hint}</p>
-              <details><summary>查看参考解释 <span>＋</span></summary><p>{activeLesson.checkpoint.answer}</p></details>
+              <div className="lesson-quiz-options" role="group" aria-label="检查题选项">
+                {activeLesson.checkpoint.options.map((option, index) => {
+                  const isSelected = selectedCheckpointOption === index;
+                  const isCorrectAnswer = checkpointChecked && index === activeLesson.checkpoint.correctIndex;
+                  const isWrongAnswer = checkpointChecked && isSelected && index !== activeLesson.checkpoint.correctIndex;
+                  return <button className={`${isSelected ? 'selected' : ''} ${isCorrectAnswer ? 'correct' : ''} ${isWrongAnswer ? 'wrong' : ''}`} type="button" aria-pressed={isSelected} onClick={() => selectCheckpointOption(index)} key={option}><span>{String.fromCharCode(65 + index)}</span><strong>{option}</strong></button>;
+                })}
+              </div>
+              <div className="lesson-quiz-actions">
+                <button type="button" disabled={selectedCheckpointOption === undefined} onClick={checkCheckpoint}>检查答案</button>
+                <span>{checkpointChecked ? checkpointCorrect ? '回答正确，本节已标记完成。' : '还差一步，看看高亮答案与解释。' : '选择一个你认为最准确的答案。'}</span>
+              </div>
+              {checkpointChecked && <div className={`lesson-quiz-feedback ${checkpointCorrect ? 'correct' : 'wrong'}`} aria-live="polite"><strong>{checkpointCorrect ? '回答正确' : '重新建立推理链'}</strong><p>{activeLesson.checkpoint.answer}</p></div>}
             </section>
 
             <section className="lesson-takeaways">

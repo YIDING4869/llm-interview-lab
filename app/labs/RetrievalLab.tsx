@@ -71,7 +71,7 @@ export function RetrievalLab() {
   return (
     <section className="standalone-lab retrieval-lab" aria-labelledby="retrieval-lab-title">
       <div className="standalone-lab-head">
-        <div><span>LAB 03 / RAG SYSTEMS</span><h2 id="retrieval-lab-title">RAG Retrieval Lab</h2><p>在固定八段语料上比较词项检索、教学概念检索和 Hybrid 排序。概念检索使用页面内公开的同义词组，不代表真实 embedding 模型。</p></div>
+        <div><span>LAB 07 / RAG SYSTEMS</span><h2 id="retrieval-lab-title">RAG Retrieval Lab</h2><p>在固定八段语料上比较词项检索、教学概念检索和 Hybrid 排序。概念检索使用页面内公开的同义词组，不代表真实 embedding 模型。</p></div>
         <div className="lab-live-metrics" aria-live="polite"><div><strong>TOP {topK}</strong><span>RETURNED</span></div><div><strong>{result.recall === null ? '—' : `${Math.round(result.recall * 100)}%`}</strong><span>RECALL@K</span></div></div>
       </div>
 

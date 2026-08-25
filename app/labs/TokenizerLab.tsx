@@ -70,7 +70,7 @@ export function TokenizerLab() {
   return (
     <section className="standalone-lab tokenizer-lab" aria-labelledby="tokenizer-lab-title">
       <div className="standalone-lab-head">
-        <div><span>LAB 02 / MODEL INTERFACE</span><h2 id="tokenizer-lab-title">Tokenizer Explorer</h2><p>同一句话用不同规则切分，会产生不同的序列长度和边界。这里的 BPE 是可解释的教学模型，不代表任何具体线上模型。</p></div>
+        <div><span>LAB 03 / MODEL INTERFACE</span><h2 id="tokenizer-lab-title">Tokenizer Explorer</h2><p>同一句话用不同规则切分，会产生不同的序列长度和边界。这里的 BPE 是可解释的教学模型，不代表任何具体线上模型。</p></div>
         <div className="lab-live-metrics" aria-live="polite"><div><strong>{result.tokens.length}</strong><span>TOKENS</span></div><div><strong>{ratio.toFixed(2)}</strong><span>CHARS / TOKEN</span></div></div>
       </div>
 

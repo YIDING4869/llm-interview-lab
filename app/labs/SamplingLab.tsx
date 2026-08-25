@@ -50,7 +50,7 @@ export function SamplingLab() {
   return (
     <section className="standalone-lab sampling-lab" aria-labelledby="sampling-lab-title">
       <div className="standalone-lab-head">
-        <div><span>LAB 03 / GENERATION</span><h2 id="sampling-lab-title">Sampling Playground</h2><p>在同一组 next-token logits 上调节 temperature、Top-K 与 Top-P，观察概率如何被拉平、截断和重新归一化。</p></div>
+        <div><span>LAB 05 / GENERATION</span><h2 id="sampling-lab-title">Sampling Playground</h2><p>在同一组 next-token logits 上调节 temperature、Top-K 与 Top-P，观察概率如何被拉平、截断和重新归一化。</p></div>
         <div className="lab-live-metrics" aria-live="polite"><div><strong>{result.activeCount}</strong><span>ACTIVE TOKENS</span></div><div><strong>{result.entropy.toFixed(2)}</strong><span>ENTROPY / BITS</span></div></div>
       </div>
 

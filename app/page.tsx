@@ -212,13 +212,13 @@ export default function Home() {
       <section className="lab-section section" id="labs">
         <div className="section-head">
           <div><p className="section-kicker">03 / VISUAL LAB</p><h2>把抽象概念变成可以调节的变量。</h2></div>
-          <p>KV Cache、Tokenizer、Sampling 和 RAG Retrieval 四项实验已经可以使用；首页保留容量估算器，完整控制与对比请进入 Labs。</p>
+          <p>七项实验已经可以使用，覆盖 Shape、优化、Tokenization、Attention、Sampling、KV Cache 与 RAG；首页保留容量估算器，完整控制请进入 Labs。</p>
         </div>
         <div className="lab-nav">
-          <a className="active" href={sitePath('/labs/?lab=kv')}><span>01</span> KV Cache Calculator <b>LIVE</b></a>
-          <a href={sitePath('/labs/?lab=tokenizer')}><span>02</span> Tokenizer Explorer <b>LIVE</b></a>
-          <a href={sitePath('/labs/?lab=sampling')}><span>03</span> Sampling Playground <b>LIVE</b></a>
-          <a href={sitePath('/labs/?lab=retrieval')}><span>04</span> RAG Retrieval Lab <b>LIVE</b></a>
+          <a className="active" href={sitePath('/labs/?lab=kv')}><span>06</span> KV Cache Calculator <b>LIVE</b></a>
+          <a href={sitePath('/labs/?lab=shapes')}><span>01</span> Tensor Shape Lab <b>LIVE</b></a>
+          <a href={sitePath('/labs/?lab=gradient')}><span>02</span> Gradient Descent <b>LIVE</b></a>
+          <a href={sitePath('/labs/?lab=attention')}><span>04</span> Attention Matrix <b>LIVE</b></a>
         </div>
         <div className="lab-stage">
           <div className="lab-controls">

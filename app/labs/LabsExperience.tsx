@@ -4,12 +4,17 @@ import { useEffect, useRef, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { sitePath } from '../../lib/site-path';
+import { AttentionMatrixLab } from './AttentionMatrixLab';
+import { GradientDescentLab } from './GradientDescentLab';
 import { KvCacheLab } from './KvCacheLab';
 import { RetrievalLab } from './RetrievalLab';
 import { SamplingLab } from './SamplingLab';
+import { TensorShapeLab } from './TensorShapeLab';
 import { TokenizerLab } from './TokenizerLab';
 
-type LabId = 'kv' | 'tokenizer' | 'sampling' | 'retrieval';
+type LabId = 'shapes' | 'gradient' | 'tokenizer' | 'attention' | 'sampling' | 'kv' | 'retrieval';
+
+const labIds: LabId[] = ['shapes', 'gradient', 'tokenizer', 'attention', 'sampling', 'kv', 'retrieval'];
 
 export function LabsExperience() {
   const [activeLab, setActiveLab] = useState<LabId>('tokenizer');
@@ -17,7 +22,7 @@ export function LabsExperience() {
 
   useEffect(() => {
     const requestedLab = new URLSearchParams(window.location.search).get('lab');
-    if (requestedLab === 'kv' || requestedLab === 'tokenizer' || requestedLab === 'sampling' || requestedLab === 'retrieval') setActiveLab(requestedLab);
+    if (labIds.includes(requestedLab as LabId)) setActiveLab(requestedLab as LabId);
   }, []);
 
   useEffect(() => {
@@ -43,16 +48,22 @@ export function LabsExperience() {
       </section>
 
       <nav className="labs-switcher" aria-label="选择实验" ref={switcherRef}>
-        <button className={activeLab === 'kv' ? 'active' : ''} type="button" onClick={() => selectLab('kv')}><span>01</span><strong>KV Cache Calculator</strong><small>容量与服务</small></button>
-        <button className={activeLab === 'tokenizer' ? 'active' : ''} type="button" onClick={() => selectLab('tokenizer')}><span>02</span><strong>Tokenizer Explorer</strong><small>切分与上下文</small></button>
-        <button className={activeLab === 'sampling' ? 'active' : ''} type="button" onClick={() => selectLab('sampling')}><span>03</span><strong>Sampling Playground</strong><small>生成与随机性</small></button>
-        <button className={activeLab === 'retrieval' ? 'active' : ''} type="button" onClick={() => selectLab('retrieval')}><span>04</span><strong>RAG Retrieval Lab</strong><small>召回与排序</small></button>
+        <button className={activeLab === 'shapes' ? 'active' : ''} type="button" onClick={() => selectLab('shapes')}><span>01</span><strong>Tensor Shape Lab</strong><small>张量与维度</small></button>
+        <button className={activeLab === 'gradient' ? 'active' : ''} type="button" onClick={() => selectLab('gradient')}><span>02</span><strong>Gradient Descent</strong><small>优化与学习率</small></button>
+        <button className={activeLab === 'tokenizer' ? 'active' : ''} type="button" onClick={() => selectLab('tokenizer')}><span>03</span><strong>Tokenizer Explorer</strong><small>切分与上下文</small></button>
+        <button className={activeLab === 'attention' ? 'active' : ''} type="button" onClick={() => selectLab('attention')}><span>04</span><strong>Attention Matrix</strong><small>QK 与 Mask</small></button>
+        <button className={activeLab === 'sampling' ? 'active' : ''} type="button" onClick={() => selectLab('sampling')}><span>05</span><strong>Sampling Playground</strong><small>生成与随机性</small></button>
+        <button className={activeLab === 'kv' ? 'active' : ''} type="button" onClick={() => selectLab('kv')}><span>06</span><strong>KV Cache Calculator</strong><small>容量与服务</small></button>
+        <button className={activeLab === 'retrieval' ? 'active' : ''} type="button" onClick={() => selectLab('retrieval')}><span>07</span><strong>RAG Retrieval Lab</strong><small>召回与排序</small></button>
       </nav>
 
       <div className="labs-stage">
-        {activeLab === 'kv' && <KvCacheLab />}
+        {activeLab === 'shapes' && <TensorShapeLab />}
+        {activeLab === 'gradient' && <GradientDescentLab />}
         {activeLab === 'tokenizer' && <TokenizerLab />}
+        {activeLab === 'attention' && <AttentionMatrixLab />}
         {activeLab === 'sampling' && <SamplingLab />}
+        {activeLab === 'kv' && <KvCacheLab />}
         {activeLab === 'retrieval' && <RetrievalLab />}
       </div>
       <SiteFooter />
