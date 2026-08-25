@@ -4,18 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
 import { entryRoutes } from '../data/curriculum';
+import { practiceCategories, practiceQuestions } from '../data/practice';
 import { sitePath } from '../lib/site-path';
-
-type Question = {
-  id: number;
-  category: string;
-  difficulty: '基础' | '进阶' | '系统设计';
-  time: string;
-  title: string;
-  answer: string;
-  points: string[];
-  followup: string;
-};
 
 const roadmaps = [
   { index: '01', title: '基础与 Transformer', detail: 'Tokenizer、Attention、RoPE、归一化与训练目标', count: '16 topics', tone: 'blue' },
@@ -24,69 +14,6 @@ const roadmaps = [
   { index: '04', title: '推理与系统', detail: 'KV Cache、量化、并行、批处理与服务架构', count: '15 topics', tone: 'orange' },
   { index: '05', title: '评测与可靠性', detail: 'LLM-as-a-Judge、偏差、幻觉、安全与 badcase', count: '11 topics', tone: 'cyan' },
   { index: '06', title: '项目深挖', detail: '实验设计、基线、失败分析、成本与扩展追问', count: '12 topics', tone: 'pink' },
-];
-
-const questions: Question[] = [
-  {
-    id: 1,
-    category: '推理系统',
-    difficulty: '进阶',
-    time: '90 秒',
-    title: '为什么 KV Cache 能加速自回归生成？它的代价是什么？',
-    answer: 'KV Cache 保存历史 token 在每一层产生的 Key 和 Value。解码新 token 时只需计算当前 token 的 Q/K/V，并让新的 Query 与缓存的 Key/Value 做注意力，避免反复重算整个前缀。代价是显存随 batch、层数、KV head 数、head dimension 和上下文长度线性增长。',
-    points: ['区分 prefill 与 decode', '说明避免重复计算的对象', '给出 KV 显存的主要变量', '提到 MQA/GQA 或 PagedAttention'],
-    followup: '如果把 MHA 换成 GQA，KV Cache 的大小会发生什么变化？',
-  },
-  {
-    id: 2,
-    category: 'Transformer',
-    difficulty: '基础',
-    time: '60 秒',
-    title: '为什么 Attention 分数要除以 √dₖ？',
-    answer: '当 Q 和 K 的各维近似独立且方差稳定时，点积方差会随维度 dₖ 增长。除以 √dₖ 能把分数尺度拉回稳定范围，减少 softmax 过早饱和，从而保留有效梯度。',
-    points: ['从点积方差解释', '连接 softmax 饱和', '说明是稳定尺度而非改变表达能力'],
-    followup: '如果使用 cosine attention，这个缩放还以同样形式存在吗？',
-  },
-  {
-    id: 3,
-    category: '后训练',
-    difficulty: '进阶',
-    time: '120 秒',
-    title: 'DPO 与基于 PPO 的 RLHF，优化目标和工程流程有什么区别？',
-    answer: 'PPO-RLHF 通常需要显式 Reward Model，并在在线采样中用策略优化约束新旧策略距离；DPO 从偏好对和参考模型直接构造分类式目标，隐式恢复相对奖励，训练流程更接近监督学习。DPO 更简单稳定，但仍依赖偏好数据、参考策略与超参数，不能等同于消除了对齐偏差。',
-    points: ['是否显式训练 Reward Model', '在线采样与离线偏好对', '参考模型和 KL 约束的角色', '不要把训练简单等同于效果更好'],
-    followup: 'DPO 中 β 过大或过小分别可能带来什么现象？',
-  },
-  {
-    id: 4,
-    category: 'RAG / Agent',
-    difficulty: '系统设计',
-    time: '5 分钟',
-    title: '设计一个带可验证引用的企业知识库问答系统。',
-    answer: '先明确文档更新频率、权限、延迟与答案可拒绝边界；再设计解析、切块、索引、混合检索、重排和生成链路。评测应拆为检索召回、引用支持率、答案正确性与拒答质量，并保留可定位到原文片段的证据。',
-    points: ['先澄清需求与权限', '检索和生成分层评测', '引用必须能回到原文', '讨论更新、缓存、延迟和失败降级'],
-    followup: '如果答案正确但引用不支持答案，应该如何计分和处理？',
-  },
-  {
-    id: 5,
-    category: '评测',
-    difficulty: '进阶',
-    time: '120 秒',
-    title: '如何判断 LLM-as-a-Judge 的评分是否可信？',
-    answer: '需要与人工标注比较一致性，并测试位置偏差、长度偏好、自我偏好、rubric 稳定性和不同 judge 间分歧。不能只报告平均相关性；还应查看分层误差、置信度、顺序交换后的稳定性以及不可判定样本。',
-    points: ['人工参考标签', '位置与自我偏好', '多 judge 分歧', '明确 no-call 或人工复核边界'],
-    followup: '如果两个 judge 的平均分高度相关，但逐样本经常不一致，能否替代人工评测？',
-  },
-  {
-    id: 6,
-    category: '项目深挖',
-    difficulty: '系统设计',
-    time: '3 分钟',
-    title: '你的实验优于 baseline，如何证明提升来自核心方法而不是额外计算量？',
-    answer: '构造计算量、数据量和调用次数匹配的 baseline，报告成本与延迟，并用消融拆开核心组件。若无法完全匹配，应明确剩余混杂因素，把结论限定为当前系统配置下的整体改进。',
-    points: ['计算与数据预算匹配', '关键组件消融', '报告方差和失败案例', '限制因果归因范围'],
-    followup: '如果最强 baseline 的成本是你的两倍，你会如何公平呈现结果？',
-  },
 ];
 
 const resources = [
@@ -98,8 +25,6 @@ const resources = [
   { type: 'PAPER', title: 'PagedAttention / vLLM', subtitle: '大模型服务的显存管理', href: 'https://arxiv.org/abs/2309.06180', tag: '推理系统' },
 ];
 
-const categories = ['全部', 'Transformer', '后训练', 'RAG / Agent', '推理系统', '评测', '项目深挖'];
-
 function formatTimer(total: number) {
   const minutes = Math.floor(total / 60).toString().padStart(2, '0');
   const seconds = (total % 60).toString().padStart(2, '0');
@@ -110,7 +35,7 @@ export default function Home() {
   const [secondsLeft, setSecondsLeft] = useState(90);
   const [timerRunning, setTimerRunning] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('全部');
+  const [activeCategory, setActiveCategory] = useState<(typeof practiceCategories)[number]>('全部');
   const [selectedId, setSelectedId] = useState(1);
   const [contextLength, setContextLength] = useState(4096);
   const [batchSize, setBatchSize] = useState(1);
@@ -121,6 +46,13 @@ export default function Home() {
   useEffect(() => {
     const saved = window.localStorage.getItem('llm-interview-lab-notes');
     if (saved) setNotes(saved);
+
+    const requestedQuestion = Number(new URLSearchParams(window.location.search).get('question'));
+    const matchedQuestion = practiceQuestions.find((question) => question.id === requestedQuestion);
+    if (matchedQuestion) {
+      setSelectedId(matchedQuestion.id);
+      setActiveCategory(matchedQuestion.category);
+    }
   }, []);
 
   useEffect(() => {
@@ -138,11 +70,18 @@ export default function Home() {
   }, [timerRunning]);
 
   const filteredQuestions = useMemo(
-    () => activeCategory === '全部' ? questions : questions.filter((question) => question.category === activeCategory),
+    () => activeCategory === '全部' ? practiceQuestions : practiceQuestions.filter((question) => question.category === activeCategory),
     [activeCategory],
   );
-  const selectedQuestion = questions.find((question) => question.id === selectedId) ?? questions[0];
+  const selectedQuestion = practiceQuestions.find((question) => question.id === selectedId) ?? practiceQuestions[0];
+  const dailyQuestion = practiceQuestions.find((question) => question.moduleId === 'inference') ?? practiceQuestions[0];
   const kvMemoryGb = (2 * 32 * kvHeads * 128 * contextLength * batchSize * 2) / 1024 ** 3;
+
+  const selectCategory = (category: (typeof practiceCategories)[number]) => {
+    setActiveCategory(category);
+    const firstMatch = category === '全部' ? practiceQuestions[0] : practiceQuestions.find((question) => question.category === category);
+    if (firstMatch) setSelectedId(firstMatch.id);
+  };
 
   const handleTimer = () => {
     if (secondsLeft === 0) {
@@ -170,23 +109,23 @@ export default function Home() {
             从原理理解到限时表达，从第一问到连续追问。为 LLM、Agent、后训练与推理岗位准备的一站式学习实验室。
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href="#practice">开始今日训练 <span>→</span></a>
+            <a className="primary-button" href={sitePath('/practice/')}>开始今日训练 <span>→</span></a>
             <a className="text-button" href="#roadmap">查看完整路线 <span>↓</span></a>
           </div>
           <dl className="hero-stats">
             <div><dt>03</dt><dd>背景入口</dd></div>
             <div><dt>14</dt><dd>知识模块</dd></div>
-            <div><dt>06</dt><dd>精编面试题</dd></div>
+            <div><dt>14</dt><dd>模块检查题</dd></div>
           </dl>
         </div>
 
         <div className="practice-shell" id="practice">
-          <div className="shell-topline"><span>DAILY PRACTICE</span><span>01 / 05</span></div>
+          <div className="shell-topline"><span>DAILY PRACTICE</span><span>09 / 14</span></div>
           <div className="practice-card">
-            <div className="card-meta"><span className="topic-pill">推理系统</span><span>建议 90 秒</span></div>
+            <div className="card-meta"><span className="topic-pill">{dailyQuestion.category}</span><span>建议 {dailyQuestion.time}</span></div>
             <p className="question-label">INTERVIEW QUESTION</p>
-            <h2>为什么 KV Cache 能加速自回归生成？它的代价是什么？</h2>
-            <div className="prompt-hint"><span className="hint-index">提示</span><p>从 prefill / decode 两个阶段，以及时间复杂度和显存占用回答。</p></div>
+            <h2>{dailyQuestion.title}</h2>
+            <div className="prompt-hint"><span className="hint-index">提示</span><p>{dailyQuestion.hint}</p></div>
             <div className="card-actions">
               <button type="button" onClick={handleTimer} aria-live="polite">
                 {secondsLeft === 0 ? '重新练习' : timerRunning ? '暂停计时' : '开始作答'}
@@ -195,7 +134,7 @@ export default function Home() {
               <button className={`icon-button ${bookmarked ? 'is-bookmarked' : ''}`} type="button" aria-label={bookmarked ? '取消收藏' : '收藏题目'} onClick={() => setBookmarked((value) => !value)}>{bookmarked ? '✓' : '＋'}</button>
             </div>
           </div>
-          <div className="shell-footer"><span><i className="status-dot" /> 今日进度 20%</span><span>下一题：PagedAttention →</span></div>
+          <div className="shell-footer"><span><i className="status-dot" /> 今日建议：完成 1 个模块闭环</span><a href={sitePath('/practice/?module=inference')}>进入推理模块 →</a></div>
         </div>
       </section>
 
@@ -241,8 +180,8 @@ export default function Home() {
             <p>每道题包含短答案、必答点和连续追问。点击题目进入回答拆解。</p>
           </div>
           <div className="filter-row" aria-label="题目分类">
-            {categories.map((category) => (
-              <button key={category} type="button" className={activeCategory === category ? 'active' : ''} onClick={() => setActiveCategory(category)} aria-pressed={activeCategory === category}>{category}</button>
+            {practiceCategories.map((category) => (
+              <button key={category} type="button" className={activeCategory === category ? 'active' : ''} onClick={() => selectCategory(category)} aria-pressed={activeCategory === category}>{category}</button>
             ))}
           </div>
           <div className="question-layout">
@@ -263,6 +202,7 @@ export default function Home() {
               <h4>必答点</h4>
               <ul>{selectedQuestion.points.map((point) => <li key={point}>{point}</li>)}</ul>
               <div className="followup-box"><span>FOLLOW-UP</span><p>{selectedQuestion.followup}</p></div>
+              <a className="answer-module-link" href={sitePath(`/practice/?module=${selectedQuestion.moduleId}`)}>进入对应模块闭环 <span>→</span></a>
             </article>
           </div>
         </div>

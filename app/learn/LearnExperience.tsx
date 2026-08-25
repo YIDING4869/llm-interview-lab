@@ -1,20 +1,34 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { entryRoutes, knowledgeModules } from '../../data/curriculum';
 import { sitePath } from '../../lib/site-path';
 
 const clusters = ['基础层', '模型层', '训练层', '应用层', '系统与研究层'] as const;
+const progressSteps = ['understand', 'answer', 'build', 'reflect'] as const;
+
+type StoredProgress = Record<string, { steps?: Partial<Record<(typeof progressSteps)[number], boolean>> }>;
 
 export function LearnExperience() {
   const [activeRouteId, setActiveRouteId] = useState(entryRoutes[0].id);
+  const [progress, setProgress] = useState<StoredProgress>({});
   const activeRoute = entryRoutes.find((route) => route.id === activeRouteId) ?? entryRoutes[0];
   const routeModules = useMemo(
     () => activeRoute.sequence.map((id) => knowledgeModules.find((module) => module.id === id)).filter(Boolean),
     [activeRoute],
   );
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('llm-interview-lab-progress-v1');
+    if (!saved) return;
+    try {
+      setProgress(JSON.parse(saved) as StoredProgress);
+    } catch {
+      window.localStorage.removeItem('llm-interview-lab-progress-v1');
+    }
+  }, []);
 
   return (
     <main className="knowledge-page">
@@ -84,12 +98,13 @@ export function LearnExperience() {
         <div className="knowledge-module-grid">
           {knowledgeModules.map((module) => {
             const routeIndex = activeRoute.sequence.indexOf(module.id);
+            const completedActions = progressSteps.filter((step) => progress[module.id]?.steps?.[step]).length;
             return (
               <details className={`knowledge-module ${routeIndex >= 0 ? 'on-route' : ''}`} id={`module-${module.id}`} key={module.id}>
                 <summary>
                   <span className="module-order">{module.order}</span>
                   <span className="module-heading"><small>{module.cluster} · {module.level}</small><strong>{module.title}</strong><p>{module.summary}</p></span>
-                  <span className="module-route-state">{routeIndex >= 0 ? `PATH ${(routeIndex + 1).toString().padStart(2, '0')}` : 'OPTIONAL'}</span>
+                  <span className="module-route-state">{routeIndex >= 0 ? `PATH ${(routeIndex + 1).toString().padStart(2, '0')} · ${completedActions}/4` : `${completedActions}/4 DONE`}</span>
                   <span className="module-expand">＋</span>
                 </summary>
                 <div className="module-detail">
@@ -98,6 +113,7 @@ export function LearnExperience() {
                   <div><span>学习产物</span><p>{module.output}</p></div>
                   <div><span>面试能力</span><p>{module.interview}</p></div>
                 </div>
+                <a className="module-practice-link" href={sitePath(`/practice/?module=${module.id}`)}><span>{completedActions === 4 ? '本模块闭环已完成' : `还需完成 ${4 - completedActions} 个学习动作`}</span><strong>进入模块学习闭环 →</strong></a>
               </details>
             );
           })}
@@ -113,7 +129,7 @@ export function LearnExperience() {
             <li><span>03</span><div><strong>能比较</strong><p>知道 baseline、控制变量、成本和失败案例应该怎么设。</p></div></li>
             <li><span>04</span><div><strong>能守边界</strong><p>明确结果支持什么、不支持什么，以及何时应该 no-call。</p></div></li>
           </ol>
-          <a className="primary-button" href={sitePath('/resources/')}>为这条路线选择资料 <span>→</span></a>
+          <a className="primary-button" href={sitePath('/practice/')}>开始第一个模块闭环 <span>→</span></a>
         </div>
       </section>
 
