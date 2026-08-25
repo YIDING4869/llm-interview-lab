@@ -12,7 +12,7 @@
 - 可按阶段、人群和关键词筛选的课程、教程、博客与论文资源库
 - 六条岗位方向，用于主干知识完成后的进一步选择
 - 带答案结构和追问的精选面试题
-- 可交互的 KV Cache 显存估算器
+- 可交互的 KV Cache、教学 Tokenizer 与 RAG Retrieval 实验
 - 保存在浏览器本地的复盘 Notes
 - 响应式布局和 PWA manifest
 
@@ -21,6 +21,7 @@
 - `/`：项目首页、岗位方向、题库、可视化实验和 Notes
 - `/learn/`：三类学习入口、分阶段计划和完整 LLM 知识树
 - `/practice/`：模块学习闭环、路线进度、检查题、动手任务和 Notes
+- `/labs/`：KV Cache 容量、Tokenizer 切分和 RAG 检索排序实验
 - `/resources/`：可筛选的学习资料与每份资料对应的建议产物
 
 课程数据集中维护在 `data/curriculum.ts`，模块练习维护在 `data/practice.ts`，公共导航与页脚位于 `components/`，页面交互分别保留在对应的 `app/` 路由目录。新增模块、题目或资料时，优先修改结构化数据，而不是在页面中重复写卡片。

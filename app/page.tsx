@@ -211,13 +211,13 @@ export default function Home() {
       <section className="lab-section section" id="labs">
         <div className="section-head">
           <div><p className="section-kicker">03 / VISUAL LAB</p><h2>把抽象概念变成可以调节的变量。</h2></div>
-          <p>第一项实验已经可以使用。改变上下文、batch 和 KV heads，观察显存如何变化。</p>
+          <p>KV Cache、Tokenizer 和 RAG Retrieval 三项实验已经可以使用；首页保留容量估算器，完整控制与对比请进入 Labs。</p>
         </div>
         <div className="lab-nav">
-          <button className="active" type="button"><span>01</span> KV Cache Calculator <b>LIVE</b></button>
-          <button type="button" disabled><span>02</span> Tokenizer Explorer <b>NEXT</b></button>
+          <a className="active" href={sitePath('/labs/?lab=kv')}><span>01</span> KV Cache Calculator <b>LIVE</b></a>
+          <a href={sitePath('/labs/?lab=tokenizer')}><span>02</span> Tokenizer Explorer <b>LIVE</b></a>
           <button type="button" disabled><span>03</span> Sampling Playground <b>NEXT</b></button>
-          <button type="button" disabled><span>04</span> RAG Retrieval Lab <b>NEXT</b></button>
+          <a href={sitePath('/labs/?lab=retrieval')}><span>04</span> RAG Retrieval Lab <b>LIVE</b></a>
         </div>
         <div className="lab-stage">
           <div className="lab-controls">
@@ -236,7 +236,7 @@ export default function Home() {
                 {Array.from({ length: 8 }, (_, index) => <span className={index < Math.max(1, Math.ceil((kvMemoryGb / 24) * 8)) ? 'filled' : ''} key={index}>L{(index + 1) * 4}</span>)}
               </div>
             </div>
-            <div className="lab-insight"><span>面试表达</span><p>KV Cache 对上下文长度和 batch size 都是线性增长；把 MHA 的 32 个 KV heads 改成 8 个 GQA heads，在其他条件不变时，KV 显存约降到四分之一。</p></div>
+            <div className="lab-insight"><span>面试表达</span><p>KV Cache 对上下文长度和 batch size 都是线性增长；把 MHA 的 32 个 KV heads 改成 8 个 GQA heads，在其他条件不变时，KV 显存约降到四分之一。</p><a href={sitePath('/labs/')}>进入完整实验室 →</a></div>
           </div>
         </div>
       </section>

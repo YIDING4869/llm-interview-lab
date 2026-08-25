@@ -1,7 +1,7 @@
 import { sitePath } from '../lib/site-path';
 
 type SiteHeaderProps = {
-  active?: 'home' | 'learn' | 'practice' | 'resources';
+  active?: 'home' | 'learn' | 'practice' | 'labs' | 'resources';
 };
 
 export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
@@ -9,7 +9,7 @@ export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
     { id: 'learn', label: '学习地图', href: sitePath('/learn/') },
     { id: 'practice', label: '学习闭环', href: sitePath('/practice/') },
     { id: 'questions', label: '面试题', href: sitePath('/#question-bank') },
-    { id: 'labs', label: '可视化', href: sitePath('/#labs') },
+    { id: 'labs', label: '可视化', href: sitePath('/labs/') },
     { id: 'resources', label: '资源库', href: sitePath('/resources/') },
     { id: 'notes', label: 'Notes', href: sitePath('/#notes') },
   ];

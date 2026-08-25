@@ -82,6 +82,7 @@ export const practiceQuestions: PracticeQuestion[] = [
     task: { title: 'Tokenizer 对比报告', brief: '用两种 tokenizer 比较中文、英文、代码和数字文本。', steps: ['固定四类代表性输入', '统计 token 数和切分片段', '找出一个可能影响任务的异常切分'], evidence: '对比表、可复现脚本和一个 badcase。' },
     notePrompt: '我能否把 tokenizer 当作模型接口的一部分，而不是训练前无关紧要的预处理？',
     resourceIds: ['nn-zero-to-hero', 'hf-llm'],
+    labHref: '/labs/?lab=tokenizer',
   },
   {
     id: 5,
@@ -157,7 +158,7 @@ export const practiceQuestions: PracticeQuestion[] = [
     task: { title: 'KV 容量与服务基准', brief: '先估算三组配置的 KV 显存，再用服务日志对比延迟。', steps: ['改变 context、batch 和 KV heads', '区分首 token 延迟与 token 间延迟', '解释估算与实测差异'], evidence: '容量表、测量结果和误差来源。' },
     notePrompt: '我能否同时解释 KV Cache 的速度收益、容量代价和调度影响？',
     resourceIds: ['vllm'],
-    labHref: '/#labs',
+    labHref: '/labs/?lab=kv',
   },
   {
     id: 10,
@@ -173,6 +174,7 @@ export const practiceQuestions: PracticeQuestion[] = [
     task: { title: '最小可验证 RAG', brief: '用一组小文档实现带引用和拒答的问答系统。', steps: ['建立检索 gold set', '记录召回片段与最终引用', '加入无答案问题并评测拒答'], evidence: '可运行 demo、评测集和错误分类。' },
     notePrompt: '系统答错时，我能否判断是检索、上下文组织、生成还是引用失败？',
     resourceIds: ['hf-llm', 'fsdl'],
+    labHref: '/labs/?lab=retrieval',
   },
   {
     id: 11,
