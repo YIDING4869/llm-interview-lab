@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { sitePath } from '../lib/site-path';
 
 type SiteHeaderProps = {
@@ -5,6 +8,7 @@ type SiteHeaderProps = {
 };
 
 export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const links = [
     { id: 'learn', label: '学习地图', href: sitePath('/learn/') },
     { id: 'practice', label: '学习闭环', href: sitePath('/practice/') },
@@ -15,7 +19,7 @@ export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
   ];
 
   return (
-    <nav className="topbar" aria-label="主导航">
+    <nav className={`topbar${menuOpen ? ' menu-open' : ''}`} aria-label="主导航">
       <a className="brand" href={sitePath('/')} aria-label="LLM Interview Lab 首页">
         <span className="brand-mark">L</span>
         <span>LLM Interview Lab</span>
@@ -26,6 +30,25 @@ export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
         ))}
       </div>
       <a className="nav-cta" href={sitePath('/practice/')}>继续学习 <span>↗</span></a>
+      <button
+        className="nav-menu-button"
+        type="button"
+        aria-expanded={menuOpen}
+        aria-controls="mobile-navigation"
+        aria-label={menuOpen ? '关闭导航菜单' : '打开导航菜单'}
+        onClick={() => setMenuOpen((open) => !open)}
+      >
+        <span />
+        <span />
+      </button>
+      <div className="mobile-nav-panel" id="mobile-navigation">
+        {links.map((link, index) => (
+          <a className={active === link.id ? 'is-active' : ''} href={link.href} key={link.id} onClick={() => setMenuOpen(false)}>
+            <span>{String(index + 1).padStart(2, '0')}</span>{link.label}
+          </a>
+        ))}
+        <a className="mobile-nav-cta" href={sitePath('/practice/')} onClick={() => setMenuOpen(false)}>继续学习 <span>→</span></a>
+      </div>
     </nav>
   );
 }
