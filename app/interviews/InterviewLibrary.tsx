@@ -29,7 +29,7 @@ export function InterviewLibrary() {
           <div><p className="eyebrow"><span /> PUBLIC REPORTS / TRACEABLE SOURCES</p><h1>看真实追问怎样发生，<br /><em>不要把面经背成题库。</em></h1></div>
           <div className="interview-source-contract">
             <p>首批内容来自候选人公开复盘。页面保留发布日期、轮次、作者自述结果和原始链接；问题经过摘要与改写，不代表公司官方固定题目。</p>
-            <dl><div><dt>{interviewRecords.length}</dt><dd>公开记录</dd></div><div><dt>07</dt><dd>公司 / 业务群</dd></div><div><dt>25–26</dt><dd>主要年份</dd></div></dl>
+            <dl><div><dt>{interviewRecords.length}</dt><dd>公开记录</dd></div><div><dt>07</dt><dd>公司 / 业务群</dd></div><div><dt>首批</dt><dd>持续补充</dd></div></dl>
           </div>
         </div>
       </section>

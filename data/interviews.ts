@@ -117,7 +117,7 @@ export const interviewRecords: InterviewRecord[] = [
     company: '阿里',
     role: '大语言模型算法',
     campaign: '春招一面 · 约 1–1.5 小时',
-    published: '原帖页面显示 02-21',
+    published: '原帖显示 02-21 · 年份待核',
     rounds: '一面 · 作者自述进入下一轮',
     outcome: '作者自述：一面通过',
     focuses: ['模型基础', 'RAG / Agent', '训练与对齐'],

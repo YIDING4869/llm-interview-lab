@@ -78,8 +78,8 @@ export function LessonWorkspace() {
       <section className="lessons-hero">
         <div className="page-breadcrumb"><a href={sitePath('/')}>首页</a><span>→</span><a href={sitePath('/learn/')}>学习地图</a><span>→</span><strong>基础课程</strong></div>
         <div className="lessons-hero-grid">
-          <div><p className="eyebrow"><span /> ZERO TO ONE / COMMON CORE</p><h1>把名词拆成步骤，<br /><em>从第一行代码走到 Transformer。</em></h1></div>
-          <div className="lesson-overall-progress"><div><span>共同主干</span><strong>{foundationLessons.length} 节基础课</strong></div><div className="lesson-progress-number"><strong>{finishedCount}</strong><span>/ {foundationLessons.length} COMPLETED</span></div><div className="lesson-progress-track"><span style={{ width: `${(finishedCount / foundationLessons.length) * 100}%` }} /></div><p>进度只保存在当前设备；完成标准是能解释检查题，而不是只滚到页面底部。</p></div>
+          <div><p className="eyebrow"><span /> ZERO TO ONE / COMPLETE SPINE</p><h1>把名词拆成步骤，<br /><em>从第一行代码走到 LLM 系统。</em></h1></div>
+          <div className="lesson-overall-progress"><div><span>完整主干</span><strong>{foundationLessons.length} 节站内课</strong></div><div className="lesson-progress-number"><strong>{finishedCount}</strong><span>/ {foundationLessons.length} COMPLETED</span></div><div className="lesson-progress-track"><span style={{ width: `${(finishedCount / foundationLessons.length) * 100}%` }} /></div><p>进度只保存在当前设备；完成标准是能解释检查题，而不是只滚到页面底部。</p></div>
         </div>
       </section>
 

@@ -20,6 +20,10 @@ export function LearnExperience() {
     () => activeRoute.sequence.map((id) => knowledgeModules.find((module) => module.id === id)).filter(Boolean),
     [activeRoute],
   );
+  const routeLessons = useMemo(
+    () => foundationLessons.filter((lesson) => activeRoute.sequence.includes(lesson.moduleId)),
+    [activeRoute],
+  );
 
   useEffect(() => {
     const saved = window.localStorage.getItem('llm-interview-lab-progress-v1');
@@ -67,7 +71,7 @@ export function LearnExperience() {
             <span>{activeRoute.label} PATH</span>
             <h3>{activeRoute.title}学习计划</h3>
             <p>{activeRoute.audience}</p>
-            {activeRoute.id === 'beginner' && <a className="route-start-lesson" href={sitePath(`/lessons/?lesson=${foundationLessons[0].id}`)}><span>新增 · {foundationLessons.length} 节共同主干课</span><strong>从第一节开始学习 →</strong></a>}
+            {routeLessons[0] && <a className="route-start-lesson" href={sitePath(`/lessons/?lesson=${routeLessons[0].id}`)}><span>{routeLessons.length} 节站内主干课 · 按当前路线筛选</span><strong>从本路线第一节开始 →</strong></a>}
             <div className="route-module-chain" aria-label="所需知识模块">
               {routeModules.map((module, index) => module && <a href={`#module-${module.id}`} key={module.id}><span>{(index + 1).toString().padStart(2, '0')}</span>{module.title}</a>)}
             </div>
