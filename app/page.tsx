@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
 import { entryRoutes } from '../data/curriculum';
+import { interviewRecords } from '../data/interviews';
 import { foundationLessons } from '../data/lessons';
 import { practiceCategories, practiceQuestions } from '../data/practice';
 import { sitePath } from '../lib/site-path';
@@ -209,9 +210,26 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="interview-preview-section section">
+        <div className="section-head">
+          <div><p className="section-kicker">03 / REAL INTERVIEW REPORTS</p><h2>看看国内岗位，真的会怎样连续追问。</h2></div>
+          <div className="resource-head-action"><p>公开个人复盘经过摘要与改写，并保留原帖、日期和结果边界。它们用于识别能力结构，不是公司官方题库。</p><a href={sitePath('/interviews/')}>浏览全部国内面经 →</a></div>
+        </div>
+        <div className="interview-preview-grid">
+          {interviewRecords.slice(0, 3).map((record, index) => (
+            <a className="interview-preview-card" href={sitePath('/interviews/')} key={record.id}>
+              <div><span>{String(index + 1).padStart(2, '0')}</span><span>{record.published}</span></div>
+              <p>{record.company}</p><h3>{record.role}</h3>
+              <div className="interview-preview-themes">{record.themes.slice(0, 3).map((theme) => <span key={theme}>{theme}</span>)}</div>
+              <strong>{record.rounds}<b>→</b></strong>
+            </a>
+          ))}
+        </div>
+      </section>
+
       <section className="lab-section section" id="labs">
         <div className="section-head">
-          <div><p className="section-kicker">03 / VISUAL LAB</p><h2>把抽象概念变成可以调节的变量。</h2></div>
+          <div><p className="section-kicker">04 / VISUAL LAB</p><h2>把抽象概念变成可以调节的变量。</h2></div>
           <p>七项实验已经可以使用，覆盖 Shape、优化、Tokenization、Attention、Sampling、KV Cache 与 RAG；首页保留容量估算器，完整控制请进入 Labs。</p>
         </div>
         <div className="lab-nav">
@@ -244,7 +262,7 @@ export default function Home() {
 
       <section className="notes-section" id="notes">
         <div className="section notes-inner">
-          <div className="notes-copy"><p className="section-kicker">04 / PERSONAL NOTES</p><h2>知识只有经过自己的语言，才真正属于你。</h2><p>记录今天没讲清楚的部分、面试官的追问，或者下一次复习时要验证的假设。第一版内容只保存在当前浏览器。</p><div className="notes-prompt"><span>今日复盘提示</span><strong>“我能否不用术语，向另一个工程师解释 KV Cache 的收益和瓶颈？”</strong></div></div>
+          <div className="notes-copy"><p className="section-kicker">05 / PERSONAL NOTES</p><h2>知识只有经过自己的语言，才真正属于你。</h2><p>记录今天没讲清楚的部分、面试官的追问，或者下一次复习时要验证的假设。第一版内容只保存在当前浏览器。</p><div className="notes-prompt"><span>今日复盘提示</span><strong>“我能否不用术语，向另一个工程师解释 KV Cache 的收益和瓶颈？”</strong></div></div>
           <div className="notes-editor">
             <div className="editor-top"><span>MY_NOTES.md</span><span>{noteStatus}</span></div>
             <textarea value={notes} onChange={(event) => { setNotes(event.target.value); setNoteStatus('有未保存修改'); }} placeholder={'# 今日复盘\n\n- 我已经能讲清楚：\n- 我仍然含糊的地方：\n- 下一次需要回答的追问：'} aria-label="个人面试复盘笔记" />
@@ -255,7 +273,7 @@ export default function Home() {
 
       <section className="resource-section section" id="resources">
         <div className="section-head">
-          <div><p className="section-kicker">05 / CURATED LIBRARY</p><h2>少而可靠的阅读入口。</h2></div>
+          <div><p className="section-kicker">06 / CURATED LIBRARY</p><h2>少而可靠的阅读入口。</h2></div>
           <div className="resource-head-action"><p>链接指向原始课程、博客或论文。平台提供阅读路线和面试问题，不复制整篇内容。</p><a href={sitePath('/resources/')}>浏览完整资源库 →</a></div>
         </div>
         <div className="resource-grid">
