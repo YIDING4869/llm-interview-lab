@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { entryRoutes, knowledgeModules, learningResources } from '../../data/curriculum';
+import { lessonsForModule } from '../../data/lessons';
 import { practiceQuestions } from '../../data/practice';
 import { sitePath } from '../../lib/site-path';
 
@@ -53,6 +54,7 @@ export function PracticeWorkspace() {
   const activeModule = knowledgeModules.find((module) => module.id === activeModuleId) ?? knowledgeModules[0];
   const question = practiceQuestions.find((item) => item.moduleId === activeModule.id) ?? practiceQuestions[0];
   const moduleResources = learningResources.filter((resource) => question.resourceIds.includes(resource.id));
+  const moduleLessons = lessonsForModule(activeModule.id);
   const activeSteps = progress[activeModule.id]?.steps ?? {};
   const finishedSteps = stepDefinitions.filter((step) => activeSteps[step.id]).length;
 
@@ -156,7 +158,7 @@ export function PracticeWorkspace() {
               <div><span>核心概念</span><ul>{activeModule.concepts.map((concept) => <li key={concept}>{concept}</li>)}</ul></div>
               <div><span>完成产物</span><p>{activeModule.output}</p></div>
             </div>
-            <div className="loop-panel-actions"><a href={sitePath(`/learn/#module-${activeModule.id}`)}>查看知识树中的模块 →</a>{moduleResources.map((resource) => <a href={resource.href} target="_blank" rel="noreferrer" key={resource.id}>{resource.title} ↗</a>)}</div>
+            <div className="loop-panel-actions">{moduleLessons[0] && <a href={sitePath(`/lessons/?lesson=${moduleLessons[0].id}`)}>先学习 {moduleLessons.length} 节站内基础课 →</a>}<a href={sitePath(`/learn/#module-${activeModule.id}`)}>查看知识树中的模块 →</a>{moduleResources.map((resource) => <a href={resource.href} target="_blank" rel="noreferrer" key={resource.id}>{resource.title} ↗</a>)}</div>
           </section>
 
           <section className="loop-panel answer-practice-panel">

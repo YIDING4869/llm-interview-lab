@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
 import { entryRoutes } from '../data/curriculum';
+import { foundationLessons } from '../data/lessons';
 import { practiceCategories, practiceQuestions } from '../data/practice';
 import { sitePath } from '../lib/site-path';
 
@@ -109,13 +110,13 @@ export default function Home() {
             从原理理解到限时表达，从第一问到连续追问。为 LLM、Agent、后训练与推理岗位准备的一站式学习实验室。
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href={sitePath('/practice/')}>开始今日训练 <span>→</span></a>
-            <a className="text-button" href="#roadmap">查看完整路线 <span>↓</span></a>
+            <a className="primary-button" href={sitePath(`/lessons/?lesson=${foundationLessons[0].id}`)}>零基础从第一课开始 <span>→</span></a>
+            <a className="text-button" href={sitePath('/practice/')}>直接进入面试训练 <span>↗</span></a>
           </div>
           <dl className="hero-stats">
             <div><dt>03</dt><dd>背景入口</dd></div>
+            <div><dt>{foundationLessons.length}</dt><dd>站内基础课</dd></div>
             <div><dt>14</dt><dd>知识模块</dd></div>
-            <div><dt>14</dt><dd>模块检查题</dd></div>
           </dl>
         </div>
 

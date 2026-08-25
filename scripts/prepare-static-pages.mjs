@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 const clientDir = join(process.cwd(), 'dist', 'client');
 
-for (const route of ['labs', 'learn', 'practice', 'resources']) {
+for (const route of ['labs', 'learn', 'lessons', 'practice', 'resources']) {
   const routeDir = join(clientDir, route);
   await mkdir(routeDir, { recursive: true });
   await copyFile(join(clientDir, `${route}.html`), join(routeDir, 'index.html'));

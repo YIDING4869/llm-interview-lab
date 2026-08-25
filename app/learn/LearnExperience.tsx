@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { entryRoutes, knowledgeModules } from '../../data/curriculum';
+import { foundationLessons, lessonsForModule } from '../../data/lessons';
 import { sitePath } from '../../lib/site-path';
 
 const clusters = ['基础层', '模型层', '训练层', '应用层', '系统与研究层'] as const;
@@ -66,6 +67,7 @@ export function LearnExperience() {
             <span>{activeRoute.label} PATH</span>
             <h3>{activeRoute.title}学习计划</h3>
             <p>{activeRoute.audience}</p>
+            {activeRoute.id === 'beginner' && <a className="route-start-lesson" href={sitePath(`/lessons/?lesson=${foundationLessons[0].id}`)}><span>新增 · {foundationLessons.length} 节共同主干课</span><strong>从第一节开始学习 →</strong></a>}
             <div className="route-module-chain" aria-label="所需知识模块">
               {routeModules.map((module, index) => module && <a href={`#module-${module.id}`} key={module.id}><span>{(index + 1).toString().padStart(2, '0')}</span>{module.title}</a>)}
             </div>
@@ -99,6 +101,7 @@ export function LearnExperience() {
           {knowledgeModules.map((module) => {
             const routeIndex = activeRoute.sequence.indexOf(module.id);
             const completedActions = progressSteps.filter((step) => progress[module.id]?.steps?.[step]).length;
+            const moduleLessons = lessonsForModule(module.id);
             return (
               <details className={`knowledge-module ${routeIndex >= 0 ? 'on-route' : ''}`} id={`module-${module.id}`} key={module.id}>
                 <summary>
@@ -113,6 +116,7 @@ export function LearnExperience() {
                   <div><span>学习产物</span><p>{module.output}</p></div>
                   <div><span>面试能力</span><p>{module.interview}</p></div>
                 </div>
+                {moduleLessons.length > 0 && <div className="module-lesson-list"><div><span>站内基础课</span><strong>{moduleLessons.length} lessons</strong></div><div>{moduleLessons.map((lesson) => <a href={sitePath(`/lessons/?lesson=${lesson.id}`)} key={lesson.id}><span>{lesson.order}</span><strong>{lesson.title}</strong><small>{lesson.duration} →</small></a>)}</div></div>}
                 <a className="module-practice-link" href={sitePath(`/practice/?module=${module.id}`)}><span>{completedActions === 4 ? '本模块闭环已完成' : `还需完成 ${4 - completedActions} 个学习动作`}</span><strong>进入模块学习闭环 →</strong></a>
               </details>
             );
