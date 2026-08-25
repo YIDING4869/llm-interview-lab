@@ -39,6 +39,11 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: /llm-interview-lab
         run: npm run build
 
+      - name: Place base-path assets at the Pages artifact root
+        run: |
+          mv dist/client/llm-interview-lab/_next dist/client/_next
+          rmdir dist/client/llm-interview-lab
+
       - name: Prepare Pages artifact
         run: touch dist/client/.nojekyll
 
