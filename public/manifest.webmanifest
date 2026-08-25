@@ -1,0 +1,23 @@
+{
+  "name": "LLM Interview Lab",
+  "short_name": "LLM Lab",
+  "description": "把 LLM 知识练成面试时能讲清楚的答案。",
+  "lang": "zh-CN",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f5f3ed",
+  "theme_color": "#111a35",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
