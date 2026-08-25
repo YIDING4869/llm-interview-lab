@@ -221,7 +221,7 @@ export const practiceQuestions: PracticeQuestion[] = [
     followup: 'Activation patching 得到正结果后，还需要哪些对照？',
     task: { title: '小模型因果干预', brief: '选择一个可验证行为，在小模型上比较 probe 与 activation intervention。', steps: ['定义行为与候选表示', '加入随机方向或匹配干预对照', '报告成功、失败和不可解释样本'], evidence: '实验脚本、对照结果和严格结论。' },
     notePrompt: '我的证据支持相关、可解码、局部因果还是可泛化机制中的哪一层？',
-    resourceIds: ['lil-log'],
+    resourceIds: ['sae-scaling', 'mib', 'circuit-tracing'],
   },
   {
     id: 14,

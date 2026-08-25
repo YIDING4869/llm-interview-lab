@@ -577,6 +577,20 @@ main {
 .library-principles article > span { grid-row: 1 / 3; color: var(--blue); font: 800 9px/1.6 ui-monospace, monospace; }
 .library-principles strong { font-size: 13px; }
 .library-principles p { margin: 5px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.frontier-map { padding: 94px max(24px, calc((100% - 1320px)/2)); color: white; background: var(--ink); }
+.frontier-map-head { display: grid; grid-template-columns: 1.15fr .85fr; gap: 90px; align-items: end; }
+.frontier-map .section-kicker { color: var(--acid); }
+.frontier-map h2 { margin: 12px 0 0; font-size: clamp(38px, 4.4vw, 62px); line-height: 1.02; letter-spacing: -.05em; }
+.frontier-map-head > p { margin: 0; color: #b7c0d5; font-size: 12px; line-height: 1.8; }
+.frontier-debate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 58px; }
+.frontier-debate-grid article { min-height: 350px; padding: 27px; border: 1px solid #3d4865; border-radius: 12px; background: #17213b; }
+.frontier-debate-grid article > div { display: flex; justify-content: space-between; color: var(--acid); font: 800 8px/1 ui-monospace, monospace; letter-spacing: .09em; }
+.frontier-debate-grid h3 { max-width: 440px; margin: 45px 0 24px; font-size: 25px; line-height: 1.2; letter-spacing: -.03em; }
+.frontier-debate-grid ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.frontier-debate-grid li { padding-left: 17px; position: relative; color: #b9c3d8; font-size: 10px; line-height: 1.6; }
+.frontier-debate-grid li::before { content: '↳'; position: absolute; left: 0; color: var(--acid); }
+.frontier-debate-grid article > p { margin: 26px 0 0; padding-top: 20px; border-top: 1px solid #35405b; color: #e5eaff; font-size: 10px; line-height: 1.7; }
+.frontier-debate-grid article > p b { display: block; margin-bottom: 8px; color: var(--acid); font: 800 8px/1 ui-monospace, monospace; }
 .library-browser { width: min(calc(100% - 48px), 1320px); display: grid; grid-template-columns: 280px 1fr; gap: 34px; margin: 0 auto; padding: 60px 0 120px; }
 .library-controls { align-self: start; position: sticky; top: 104px; }
 .resource-search { display: block; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
@@ -587,6 +601,10 @@ main {
 .resource-filter-group > div { display: flex; flex-wrap: wrap; gap: 6px; }
 .resource-filter-group button { border: 1px solid var(--line); border-radius: 999px; padding: 7px 9px; color: #687188; background: rgba(255,255,255,.5); font-size: 9px; cursor: pointer; }
 .resource-filter-group button.active { border-color: var(--blue); color: white; background: var(--blue); }
+.frontier-resource-shortcut { width: 100%; display: block; margin-top: 24px; padding: 17px; border: 0; border-radius: 9px; text-align: left; color: var(--ink); background: var(--acid); cursor: pointer; }
+.frontier-resource-shortcut span, .frontier-resource-shortcut strong { display: block; }
+.frontier-resource-shortcut span { color: #5e672c; font: 800 8px/1 ui-monospace, monospace; }
+.frontier-resource-shortcut strong { margin-top: 8px; font-size: 11px; }
 .route-reminder { display: block; margin-top: 24px; padding: 17px; border-radius: 9px; color: white; background: var(--ink); }
 .route-reminder span, .route-reminder strong { display: block; }
 .route-reminder span { color: #9fa9c2; font-size: 9px; }
@@ -598,9 +616,17 @@ main {
 .full-resource-top { display: flex; justify-content: space-between; color: #969eaf; font: 750 8px/1 ui-monospace, monospace; letter-spacing: .1em; }
 .full-resource-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 38px; }
 .full-resource-tags span { padding: 6px 7px; border-radius: 4px; color: var(--blue); background: #e7ebff; font-size: 8px; font-weight: 800; }
+.full-resource-tags span.topic { color: #627016; background: #eef8c5; }
 .full-resource-card h2 { margin: 17px 0 6px; font-size: 21px; line-height: 1.28; letter-spacing: -.03em; }
 .resource-provider { margin: 0; color: #9098a9; font-size: 9px; }
 .resource-why { margin: 22px 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.resource-position, .resource-caveat { padding: 14px 15px; border: 1px solid #dfe3ec; background: white; }
+.resource-position { border-radius: 9px 9px 0 0; }
+.resource-caveat { margin-top: -1px; border-radius: 0 0 9px 9px; background: #f7f5ee; }
+.resource-position span, .resource-caveat span { color: var(--blue); font: 800 8px/1 ui-monospace, monospace; letter-spacing: .08em; }
+.resource-caveat span { color: #7b6740; }
+.resource-position p, .resource-caveat p { margin: 8px 0 0; color: var(--ink); font-size: 10px; line-height: 1.6; }
+.resource-caveat p { color: #665d4e; }
 .resource-output { margin-top: auto; padding: 14px; border-left: 3px solid var(--blue); background: #eef0f5; }
 .resource-output span, .resource-output strong { display: block; }
 .resource-output span { color: var(--blue); font: 800 8px/1 ui-monospace, monospace; }
@@ -1166,6 +1192,7 @@ footer > a { justify-self: end; font-size: 11px; font-weight: 750; }
   .learning-contract li:nth-child(2) { border-right: 0; }
   .learning-contract li:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.26); }
   .library-browser { grid-template-columns: 1fr; }
+  .frontier-map-head { grid-template-columns: 1fr; gap: 26px; }
   .library-controls { position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
   .route-reminder { align-self: end; }
   .lessons-hero-grid { grid-template-columns: 1fr; gap: 36px; }
@@ -1221,6 +1248,9 @@ footer > a { justify-self: end; font-size: 11px; font-weight: 750; }
   .editor-actions > span { display: none; }
   .editor-actions { justify-content: flex-end; }
   .knowledge-hero, .library-hero { padding: 38px 18px 65px; }
+  .frontier-map { padding: 72px 18px; }
+  .frontier-debate-grid { grid-template-columns: 1fr; }
+  .frontier-debate-grid article { min-height: 0; }
   .knowledge-hero-grid, .library-hero-grid { margin-top: 52px; }
   .knowledge-hero h1, .library-hero h1 { font-size: 43px; }
   .entry-route-section, .library-browser { width: calc(100% - 36px); padding-top: 50px; }

@@ -22,6 +22,7 @@ export type FoundationLesson = {
   checkpoint: { question: string; hint: string; options: string[]; correctIndex: number; answer: string };
   takeaways: string[];
   labHref?: string;
+  resourceIds?: string[];
 };
 
 export const foundationLessons: FoundationLesson[] = [
@@ -264,6 +265,54 @@ export const foundationLessons: FoundationLesson[] = [
     ],
     checkpoint: { question: 'Probe 可以高准确率预测某个属性，最稳妥的结论是什么？', hint: 'Probe 测量的是可解码信息。', options: ['模型一定因果使用该属性', '该表示中存在可被此 Probe 解码的信息', '该属性由单个神经元存储', '对所有模型都成立'], correctIndex: 1, answer: '最稳妥的结论是该表示包含能被当前 Probe 解码的信息。要证明模型在行为中使用它，还需要干预、对照和行为后果。' },
     takeaways: ['可解码性不等于因果使用', '干预需要匹配对照和副作用测量', '机制结论必须限定模型、任务与样本范围'], labHref: '/labs/?lab=attention',
+  },
+  {
+    id: 'sae-feature-dictionaries', moduleId: 'interpretability', order: '12.2', title: 'SAE、Superposition 与特征字典', eyebrow: 'ACTIVATIONS → SPARSE FEATURES → TEST', duration: '60 分钟', level: '基础',
+    summary: '理解稀疏自编码器为何被用于拆解稠密激活，以及为什么“特征可命名”仍然不是机制结论。',
+    goals: ['解释 superposition 与 SAE 的基本动机', '读懂重构—稀疏权衡', '把特征发现与因果验证分成两步'],
+    sections: [
+      { title: '为什么要从神经元转向特征字典', lead: '一个神经元可能同时响应多个概念，一个概念也可能分布在多个方向。', paragraphs: ['Superposition 假说认为，模型会把多于表示维度的特征压进同一激活空间。SAE 学习一个更大的字典，把稠密激活 x 编码为少量非零系数 f，再用这些系数近似重构 x。'], bullets: ['神经元不是天然的语义原子', '字典向量是候选表示方向，不是自动获得的真值标签', '特征命名来自激活样本、自动解释或人工检查，仍可能受选择偏差影响'] },
+      { title: 'SAE 优化的是可用代理目标', lead: '训练时既希望重构激活，又希望只有少数特征被打开。', formula: { label: 'SPARSE AUTOENCODER', expression: 'f = TopK(Wₑx + bₑ),   x̂ = W_d f + b_d', explanation: 'TopK 让每个样本只激活 k 个候选特征；重构误差衡量信息保留，稀疏度衡量表示简洁。二者变好不等于下游因果解释更正确。' }, bullets: ['检查 explained variance 或重构误差', '记录 L0 / firing frequency 与 dead features', '比较不同 k、字典宽度和训练数据', '避免只挑看起来最“漂亮”的特征展示'] },
+      { title: '发现候选特征后，必须回到行为', lead: 'SAE 最有价值的用法是生成可检验假设，而不是终止实验。', bullets: ['用独立样本确认选择性与稳定性', '做 feature ablation、patching 或 steering', '加入幅度匹配、随机特征和非目标行为对照', '报告重构缺口与干预的非特异性损伤'], callout: '把流程写成“字典发现 → 语义假设 → 因果干预 → 行为读出 → 外部验证”，而不是“看到可解释激活 → 宣称找到了概念”。' },
+    ],
+    checkpoint: { question: '一个 SAE 同时获得较低重构误差和较高稀疏度，最稳妥的结论是什么？', hint: '先区分表示代理指标与行为机制。', options: ['它已恢复模型真实且唯一的概念', '它在当前数据上获得了更好的稀疏—重构权衡', '每个特征都具有单一稳定语义', '干预这些特征一定只改变目标行为'], correctIndex: 1, answer: '这说明 SAE 在当前激活数据与评测设定下取得了更好的稀疏—重构权衡。要证明语义稳定、因果使用或机制完整性，还需要独立样本、干预、对照和下游行为评测。' },
+    takeaways: ['SAE 学到的是候选特征字典', '代理指标用于筛选表示而非证明机制', '特征解释必须经过行为干预与外部验证'], resourceIds: ['sae-scaling', 'saebench', 'subspace-sae-2026'],
+  },
+  {
+    id: 'circuit-tracing', moduleId: 'interpretability', order: '12.3', title: 'Circuit Tracing 与 Attribution Graph', eyebrow: 'REPLACE → TRACE → INTERVENE', duration: '65 分钟', level: '基础',
+    summary: '从 attention map 走向跨层计算路径，并理解 attribution graph 为什么是机制假设而不是最终真相。',
+    goals: ['区分 attention visualization 与 circuit tracing', '解释 replacement model 和 attribution edge', '设计能验证候选电路的干预'],
+    sections: [
+      { title: '电路问题问的是计算如何组合', lead: '单个注意力头的热力图只显示权重，不等于信息被如何读取、变换并影响输出。', bullets: ['节点可以是 token、feature、attention head 或输出 logit', '边描述在给定输入附近的直接影响或归因', '路径连接跨层的读取、转换与写回', '电路通常是 prompt-specific，不自动成为模型全局算法'] },
+      { title: '稀疏替代模型让路径可追踪', lead: 'Cross-layer transcoder 用更稀疏的候选特征近似原模型中的 MLP 计算。', paragraphs: ['Circuit Tracing 先建立近似 replacement model，再在单个 prompt 附近线性化或分解局部影响，生成 attribution graph。这样能把密集计算压缩成可浏览的候选路径。'], bullets: ['先报告替代模型对原输出与中间激活的保真度', '记录筛边阈值和未展示的残余影响', '区分“图中没有”与“原模型没有”', '同一路径在改写 prompt 后可能重组'], callout: 'Attribution graph 的节点和边来自分析表示与近似规则；它不是从模型内部直接读出的唯一因果图。' },
+      { title: '用干预验证路径，而不是用故事补齐路径', lead: '候选路径应预测删除、替换或增强某个节点后的行为变化。', bullets: ['逐节点或逐路径 ablation，检查目标 logit / 行为变化', '用 patching 测试源信息是否沿候选路径传递', '加入相同幅度的非路径节点与随机路径对照', '检查通用能力损伤、冗余路径和补偿效应'] },
+    ],
+    checkpoint: { question: 'Attribution graph 中没有出现某条看似重要的计算，最准确的解释是什么？', hint: '图依赖近似模型、局部输入与筛边规则。', options: ['原模型一定没有这条计算', '模型拒绝暴露内部机制', '它可能未被 replacement model 捕获或被当前阈值省略', '只要增加颜色就能恢复'], correctIndex: 2, answer: '缺失可能来自替代模型重构误差、局部线性近似、特征基底或筛边阈值。因此应检查保真度、残余影响，并通过直接干预测试原模型，而不是把“图中未显示”当成机制不存在。' },
+    takeaways: ['Attention map 不是完整计算路径', 'Attribution graph 是近似模型上的候选机制', '路径主张需要在原模型行为上接受干预验证'], resourceIds: ['circuit-tracing', 'mib', 'mi-axioms'],
+  },
+  {
+    id: 'interpretability-benchmarks', moduleId: 'interpretability', order: '12.4', title: '如何评测一个可解释性方法', eyebrow: 'PROXY → CAUSAL TASK → TRANSFER', duration: '60 分钟', level: '基础',
+    summary: '用 SAEBench、MIB 与机制验证标准，把“看起来可解释”拆成表示质量、因果恢复和外部迁移。',
+    goals: ['识别常见代理指标测到什么', '比较 feature 与 circuit benchmark', '为方法写出可证伪的验证矩阵'],
+    sections: [
+      { title: '第一层：表示代理指标', lead: '重构误差、稀疏度和自动解释分数便于大规模筛选，但不会直接回答模型如何计算。', bullets: ['Reconstruction：多少原激活信息被保留', 'Sparsity：每个样本用了多少候选特征', 'Feature density：特征是否死亡或过度频繁', 'Automated explanation：样本能否被文本标签概括'] },
+      { title: '第二层：任务内因果恢复', lead: 'MIB 把目标改成恢复已知或可检验的因果变量与计算路径。', bullets: ['Circuit localization：能否精确且简洁地找出相关组件', 'Causal variable：干预表示能否按预期改变行为', 'SAEBench：同一 SAE 在多种代理与下游指标中是否稳定', '不同任务赢家不同，单一排行榜不足以概括方法质量'], callout: 'MIB 中 SAE 特征未优于神经元，是对当前任务集合的结果；它否定的是“SAE 必然更好”的捷径，不是所有 SAE 用途。' },
+      { title: '第三层：验证解释能否组合与迁移', lead: '一个解释要同时说明局部近似、组件组合和换样本后的失效方式。', bullets: ['忠实度：解释预测的干预结果是否发生', '简洁度：是否包含大量无关组件', '组合性：局部解释能否组成整体行为', '外部效度：跨 prompt、任务、模型是否仍成立', '成本：需要多少标注、训练和模型访问'] },
+    ],
+    checkpoint: { question: '某 SAE 在重构与自动解释分数上都领先，可以直接称为最佳机制解释方法吗？', hint: '比较代理表现与因果任务表现。', options: ['可以，两个分数已经足够', '不可以，还需因果恢复、干预验证与迁移评测', '可以，只要字典更宽', '不可以，因为 SAE 没有任何价值'], correctIndex: 1, answer: '不能。它在两个代理指标上更强，但机制主张还需要任务内因果恢复、原模型干预和跨样本迁移。更合理的说法是“当前代理前沿更优，机制效用尚待验证”。' },
+    takeaways: ['代理指标用于筛选，不直接证明机制', 'Feature 与 circuit 需要不同但相连的任务评测', '方法结论必须绑定任务、基底、模型与成本'], resourceIds: ['saebench', 'mib', 'mi-axioms'],
+  },
+  {
+    id: 'cot-faithfulness-monitorability', moduleId: 'interpretability', order: '12.5', title: 'CoT Faithfulness 与 Monitorability', eyebrow: 'SAYING → CAUSE → SIGNAL', duration: '55 分钟', level: '基础',
+    summary: '区分“推理文本是否忠实反映原因”与“推理文本是否暴露可检测信号”，避免把 CoT 当成内部思维录像。',
+    goals: ['区分 faithfulness 与 monitorability', '解释当前实验结果支持什么', '把 CoT 监控与机制分析正确组合'],
+    sections: [
+      { title: '两个问题不能混为一个指标', lead: 'Faithfulness 问 CoT 是否说明真正影响答案的因素；monitorability 问观察者能否从 CoT 发现关心的行为。', bullets: ['CoT 可能不忠实，但仍泄露可监控线索', 'CoT 可能语言流畅，却省略关键影响因素', '最终答案正确不保证文字理由正确', '内部机制证据也不能仅由 CoT 自述得到'] },
+      { title: '当前结果说明信号有用，但并不完整', lead: 'Anthropic 在隐藏提示任务中观察到，模型经常使用提示却不主动承认。', paragraphs: ['报告中的平均提示披露率约为 Claude 3.7 Sonnet 25%、DeepSeek R1 39%；reward-hacking 线索在部分设置中的主动说明率甚至低于 2%。这些数字是特定模型、提示和选择题设置的测量，不是自然任务中的固定常数。'], bullets: ['把实验条件和模型版本与数字一起报告', '区分模型是否使用线索、是否答对、是否在 CoT 中披露', '不要把一次不披露直接解释为有意欺骗'] },
+      { title: 'Monitorability 是额外观测面', lead: 'OpenAI 的 13 类评测、24 个环境显示，CoT 通常比只看动作或输出提供更多检测信号。', bullets: ['较长推理在当前评测中往往更可监控', '能力优化可能带来 monitorability tax', '当前规模的 RL 未显示显著损害，但不保证未来尺度', '更真实行为、评测察觉与低频风险仍是开放问题'], callout: '实务上组合三层：输出/动作监控 + CoT 监控 + 内部机制分析；三者证据不同，不能互相冒充。' },
+    ],
+    checkpoint: { question: '一个 CoT monitor 成功识别了危险行为，能否证明 CoT 忠实记录了模型内部原因？', hint: 'Monitorability 与 faithfulness 回答不同问题。', options: ['能，检测成功等于完全忠实', '不能；它只证明当前文本包含可检测信号', '能，只要 CoT 足够长', '不能，因为 CoT 永远没有信息'], correctIndex: 1, answer: '不能。检测成功说明 CoT 包含与目标行为相关的可用信号，但不证明它完整或忠实地记录了内部因果过程。Faithfulness 需要独立设计的因果或信息披露实验。' },
+    takeaways: ['CoT 不是内部思维录像', 'Faithfulness 与 monitorability 是不同坐标', 'CoT 监控应与行为和内部机制证据组合'], resourceIds: ['cot-faithfulness', 'cot-monitorability', 'circuit-tracing'],
   },
   {
     id: 'project-evidence-story', moduleId: 'project', order: '13.1', title: '把项目整理成可追问的证据链', eyebrow: 'QUESTION → DECISION → EVIDENCE', duration: '50 分钟', level: '基础',

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
-import { learningResources } from '../../data/curriculum';
+import { frontierDebates, learningResources } from '../../data/curriculum';
 import { sitePath } from '../../lib/site-path';
 
 const stages = ['全部', '编程基础', '深度学习', 'LLM 核心', '应用与系统', '对齐与研究'] as const;
@@ -19,7 +19,7 @@ export function ResourceLibrary() {
     return learningResources.filter((resource) => {
       const matchesStage = stage === '全部' || resource.stage === stage;
       const matchesAudience = audience === '全部人群' || resource.audiences.includes(audience);
-      const haystack = `${resource.title} ${resource.provider} ${resource.why} ${resource.stage}`.toLowerCase();
+      const haystack = `${resource.title} ${resource.provider} ${resource.why} ${resource.stage} ${resource.topics?.join(' ') ?? ''} ${resource.viewpoint ?? ''} ${resource.boundary ?? ''}`.toLowerCase();
       return matchesStage && matchesAudience && (!normalizedQuery || haystack.includes(normalizedQuery));
     });
   }, [stage, audience, query]);
@@ -40,11 +40,19 @@ export function ResourceLibrary() {
         </div>
       </section>
 
+      <section className="frontier-map">
+        <div className="frontier-map-head"><div><p className="section-kicker">FRONTIER MAP · UPDATED 2026</p><h2>前沿不是一条答案，<br />而是四个仍在变化的问题。</h2></div><p>这里把论文按争议组织：同一个结果支持什么、反对什么，以及还缺哪类证据。标记为“预印本”的 2026 工作属于早期信号，不与同行评审结果等价。</p></div>
+        <div className="frontier-debate-grid">
+          {frontierDebates.map((debate, index) => <article key={debate.id}><div><span>{String(index + 1).padStart(2, '0')}</span><strong>{debate.title}</strong></div><h3>{debate.question}</h3><ul>{debate.positions.map((position) => <li key={position}>{position}</li>)}</ul><p><b>当前判断</b>{debate.takeaway}</p></article>)}
+        </div>
+      </section>
+
       <section className="library-browser">
         <div className="library-controls">
           <label className="resource-search"><span>SEARCH</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索课程、主题或作者" /></label>
           <div className="resource-filter-group"><span>学习阶段</span><div>{stages.map((item) => <button className={stage === item ? 'active' : ''} key={item} type="button" onClick={() => setStage(item)}>{item}</button>)}</div></div>
           <div className="resource-filter-group"><span>适合人群</span><div>{audiences.map((item) => <button className={audience === item ? 'active' : ''} key={item} type="button" onClick={() => setAudience(item)}>{item}</button>)}</div></div>
+          <button className="frontier-resource-shortcut" type="button" onClick={() => { setStage('对齐与研究'); setAudience('全部人群'); setQuery('可解释性'); }}><span>FRONTIER READING</span><strong>只看可解释性前沿 →</strong></button>
           <a className="route-reminder" href={sitePath('/learn/')}><span>还不确定从哪里开始？</span><strong>先选择学习路线 →</strong></a>
         </div>
 
@@ -53,10 +61,12 @@ export function ResourceLibrary() {
           <div className="full-resource-grid">
             {filteredResources.map((resource, index) => (
               <a className="full-resource-card" href={resource.href} target="_blank" rel="noreferrer" key={resource.id}>
-                <div className="full-resource-top"><span>{resource.type}</span><span>{(index + 1).toString().padStart(2, '0')}</span></div>
-                <div className="full-resource-tags"><span>{resource.stage}</span><span>{resource.language}</span><span>{resource.time}</span></div>
+                <div className="full-resource-top"><span>{resource.type}{resource.status ? ` · ${resource.status}` : ''}</span><span>{resource.year ?? (index + 1).toString().padStart(2, '0')}</span></div>
+                <div className="full-resource-tags"><span>{resource.stage}</span><span>{resource.language}</span><span>{resource.time}</span>{resource.topics?.slice(0, 2).map((topic) => <span className="topic" key={topic}>{topic}</span>)}</div>
                 <h2>{resource.title}</h2><p className="resource-provider">{resource.provider}</p>
                 <p className="resource-why">{resource.why}</p>
+                {resource.viewpoint && <div className="resource-position"><span>核心观点</span><p>{resource.viewpoint}</p></div>}
+                {resource.boundary && <div className="resource-caveat"><span>证据边界</span><p>{resource.boundary}</p></div>}
                 <div className="resource-output"><span>建议产物</span><strong>{resource.deliverable}</strong></div>
                 <div className="resource-audience"><span>适合</span>{resource.audiences.map((item) => <b key={item}>{item}</b>)}<i>打开资源 ↗</i></div>
               </a>

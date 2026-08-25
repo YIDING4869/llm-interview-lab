@@ -44,9 +44,10 @@ export function LessonWorkspace() {
   const checkpointChecked = Boolean(checkpointChecks[activeLesson.id]);
   const checkpointCorrect = checkpointChecked && selectedCheckpointOption === activeLesson.checkpoint.correctIndex;
   const moduleQuestion = practiceQuestions.find((question) => question.moduleId === activeLesson.moduleId);
+  const lessonResourceIds = activeLesson.resourceIds ?? moduleQuestion?.resourceIds ?? [];
   const moduleResources = useMemo(
-    () => learningResources.filter((resource) => moduleQuestion?.resourceIds.includes(resource.id)).slice(0, 3),
-    [moduleQuestion],
+    () => learningResources.filter((resource) => lessonResourceIds.includes(resource.id)).slice(0, 3),
+    [lessonResourceIds],
   );
   const modulesWithLessons = knowledgeModules.filter((module) => lessonsForModule(module.id).length > 0);
 
