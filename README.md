@@ -2,6 +2,8 @@
 
 面向 LLM、Agent、后训练与推理岗位的互动面试学习实验室。它既服务有机器学习背景的求职者，也为零基础和软件工程转 LLM 的学习者提供明确入口。
 
+**在线体验：** [yiding4869.github.io/llm-interview-lab](https://yiding4869.github.io/llm-interview-lab/)
+
 ## 当前内容
 
 - 零基础、软件工程转码、ML 背景三条起步路线

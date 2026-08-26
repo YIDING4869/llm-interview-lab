@@ -5,8 +5,8 @@ const siteUrl = 'https://yiding4869.github.io/llm-interview-lab/';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'LLM Interview Lab — 把知识练成答案',
-  description: '面向 LLM、Agent、后训练与推理岗位的互动面试学习实验室。',
+  title: 'LLM Interview Lab — 中文大模型面试学习与可视化',
+  description: '从零到一学习 LLM：基础课程、面试题、国内面经、Transformer 可视化实验、前沿论文与个人 Notes。',
   manifest: 'manifest.webmanifest',
   icons: {
     icon: [{ url: 'icon-192.png', type: 'image/png' }],
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'LLM Interview Lab',
-    description: '把知识练成面试时能讲清楚的答案。',
+    description: '从零到一学习 LLM：基础课程、面试题、国内面经、可视化实验与前沿论文。',
     type: 'website',
     locale: 'zh_CN',
     url: siteUrl,
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'LLM Interview Lab',
-    description: '把知识练成面试时能讲清楚的答案。',
+    description: '从零到一学习 LLM：基础课程、面试题、国内面经、可视化实验与前沿论文。',
     images: ['og.png'],
   },
 };

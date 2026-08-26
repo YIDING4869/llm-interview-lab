@@ -27,7 +27,7 @@ export type FoundationLesson = {
 
 export const foundationLessons: FoundationLesson[] = [
   {
-    id: 'program-execution', moduleId: 'foundation-code', order: '00.1', title: '程序到底是怎样运行的？', eyebrow: 'COMPUTER → PROGRAM → OUTPUT', duration: '25 分钟', level: '零基础',
+    id: 'program-execution', moduleId: 'foundation-code', order: '00.1', title: '程序到底是怎样运行的？', eyebrow: 'COMPUTER → PROGRAM → OUTPUT', duration: '15 分钟', level: '零基础',
     summary: '从输入、状态、指令和输出理解程序，先建立调试所需的执行模型。',
     goals: ['区分源代码、运行时和输出', '沿执行顺序解释一个小程序', '把报错定位到输入、依赖、逻辑或输出边界'],
     sections: [
@@ -39,7 +39,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['程序可以分解为输入、状态变化和输出', '函数有明确的输入输出边界', '调试要沿执行路径逐层缩小范围'],
   },
   {
-    id: 'python-text-api', moduleId: 'foundation-code', order: '00.2', title: '用 Python 处理文本与调用 API', eyebrow: 'TEXT → JSON → HTTP', duration: '40 分钟', level: '零基础',
+    id: 'python-text-api', moduleId: 'foundation-code', order: '00.2', title: '用 Python 处理文本与调用 API', eyebrow: 'TEXT → JSON → HTTP', duration: '20 分钟', level: '零基础',
     summary: '掌握进入 LLM 应用最常用的 Python、JSON 与 HTTP 最小闭环。',
     goals: ['使用字符串、列表和字典整理文本', '读懂 JSON 请求与响应', '为 API 调用保留可诊断的错误信息'],
     sections: [
@@ -51,7 +51,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['消息通常由列表和字典组成', 'JSON 是常见的网络数据表示', '可诊断 API 调用必须保留请求边界和响应信息'],
   },
   {
-    id: 'vectors-and-shapes', moduleId: 'foundation-math', order: '01.1', title: '向量、矩阵、张量与 Shape', eyebrow: 'VALUES WITH STRUCTURE', duration: '35 分钟', level: '零基础',
+    id: 'vectors-and-shapes', moduleId: 'foundation-math', order: '01.1', title: '向量、矩阵、张量与 Shape', eyebrow: 'VALUES WITH STRUCTURE', duration: '20 分钟', level: '零基础',
     summary: '用“数据有几层、每层有多长”理解张量，而不是先背线性代数符号。',
     goals: ['读懂标量、向量、矩阵和三维张量', '沿 shape 判断矩阵乘法是否合法', '理解 batch、sequence 和 hidden dimension'],
     sections: [
@@ -63,7 +63,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Shape 同时描述结构和语义', '线性层通常变换最后一维', 'Transformer 中经常使用 [batch, sequence, hidden]'], labHref: '/labs/?lab=shapes',
   },
   {
-    id: 'probability-and-softmax', moduleId: 'foundation-math', order: '01.2', title: '概率、Logits 与 Softmax', eyebrow: 'SCORES → PROBABILITIES', duration: '35 分钟', level: '零基础',
+    id: 'probability-and-softmax', moduleId: 'foundation-math', order: '01.2', title: '概率、Logits 与 Softmax', eyebrow: 'SCORES → PROBABILITIES', duration: '20 分钟', level: '零基础',
     summary: '理解模型如何把任意分数变成可比较的 next-token 概率。',
     goals: ['区分 logit 与 probability', '解释 Softmax 的归一化作用', '说明 temperature 为什么改变分布形状'],
     sections: [
@@ -75,7 +75,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Logit 是未归一化分数', 'Softmax 产生概率分布', 'Temperature 控制分布集中程度而不是模型知识'], labHref: '/labs/?lab=sampling',
   },
   {
-    id: 'loss-and-gradient', moduleId: 'foundation-math', order: '01.3', title: 'Loss、梯度与参数更新', eyebrow: 'MEASURE → DIFFERENTIATE → UPDATE', duration: '45 分钟', level: '基础',
+    id: 'loss-and-gradient', moduleId: 'foundation-math', order: '01.3', title: 'Loss、梯度与参数更新', eyebrow: 'MEASURE → DIFFERENTIATE → UPDATE', duration: '25 分钟', level: '基础',
     summary: '把训练理解为反复测量错误、计算方向并更新参数。',
     goals: ['解释 loss 的作用', '理解梯度描述局部变化方向', '读懂一次最小梯度下降更新'],
     sections: [
@@ -87,7 +87,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Loss 定义模型被奖励的方向', '梯度描述参数对 loss 的局部影响', '训练改进不等同于泛化改进'], labHref: '/labs/?lab=gradient',
   },
   {
-    id: 'neural-network-basics', moduleId: 'foundation-dl', order: '02.1', title: '神经网络、激活函数与表示', eyebrow: 'LINEAR → NONLINEAR → REPRESENTATION', duration: '40 分钟', level: '基础',
+    id: 'neural-network-basics', moduleId: 'foundation-dl', order: '02.1', title: '神经网络、激活函数与表示', eyebrow: 'LINEAR → NONLINEAR → REPRESENTATION', duration: '20 分钟', level: '基础',
     summary: '理解神经网络为何要堆叠线性层与非线性激活。',
     goals: ['解释一个神经元和线性层', '说明非线性激活的必要性', '把 hidden representation 与任务输出区分开'],
     sections: [
@@ -99,7 +99,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['线性层学习特征组合', '激活函数带来非线性表达能力', '隐藏表示是模型学习到的内部坐标'],
   },
   {
-    id: 'pytorch-training-loop', moduleId: 'foundation-dl', order: '02.2', title: 'PyTorch 训练循环与 Autograd', eyebrow: 'FORWARD → BACKWARD → STEP', duration: '50 分钟', level: '基础',
+    id: 'pytorch-training-loop', moduleId: 'foundation-dl', order: '02.2', title: 'PyTorch 训练循环与 Autograd', eyebrow: 'FORWARD → BACKWARD → STEP', duration: '25 分钟', level: '基础',
     summary: '用一个完整训练循环连接 Tensor、模型、Loss、梯度和 Optimizer。',
     goals: ['解释 forward、backward 和 step', '知道梯度为何需要清空', '区分 train 与 evaluation 模式'],
     sections: [
@@ -111,7 +111,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Autograd 沿计算图应用链式法则', '梯度默认累积，需要按训练设计清空', '验证阶段只测量，不更新参数'],
   },
   {
-    id: 'tokenization-basics', moduleId: 'lm-basics', order: '03.1', title: 'Tokenizer：文本如何变成 Token', eyebrow: 'TEXT → TOKEN IDS', duration: '40 分钟', level: '零基础',
+    id: 'tokenization-basics', moduleId: 'lm-basics', order: '03.1', title: 'Tokenizer：文本如何变成 Token', eyebrow: 'TEXT → TOKEN IDS', duration: '20 分钟', level: '零基础',
     summary: '理解 tokenizer 是模型接口的一部分，它直接影响长度、成本和跨语言表现。',
     goals: ['区分字符、词和子词切分', '解释 vocabulary 与 token id', '说明切分如何影响上下文与成本'],
     sections: [
@@ -123,7 +123,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Tokenizer 把字符串变成 token id', '切分效率影响序列长度和计算成本', '特殊 token 与模板同样属于模型接口'], labHref: '/labs/?lab=tokenizer',
   },
   {
-    id: 'embeddings', moduleId: 'lm-basics', order: '03.2', title: 'Embedding：Token 如何变成向量', eyebrow: 'TOKEN ID → VECTOR', duration: '35 分钟', level: '基础',
+    id: 'embeddings', moduleId: 'lm-basics', order: '03.2', title: 'Embedding：Token 如何变成向量', eyebrow: 'TOKEN ID → VECTOR', duration: '20 分钟', level: '基础',
     summary: '理解 embedding lookup、表示空间以及输入输出权重的基本作用。',
     goals: ['解释 embedding table 的输入输出', '读懂 [batch, seq] 到 [batch, seq, hidden]', '避免把相似度直接等同于真实语义'],
     sections: [
@@ -135,7 +135,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Token id 是 embedding table 的索引', 'Embedding 把离散 id 变为连续向量', '向量相似是特定表示与度量下的结果'],
   },
   {
-    id: 'next-token-objective', moduleId: 'lm-basics', order: '03.3', title: 'Next-token Prediction 与 Perplexity', eyebrow: 'PREFIX → NEXT TOKEN', duration: '45 分钟', level: '基础',
+    id: 'next-token-objective', moduleId: 'lm-basics', order: '03.3', title: 'Next-token Prediction 与 Perplexity', eyebrow: 'PREFIX → NEXT TOKEN', duration: '25 分钟', level: '基础',
     summary: '理解自回归语言模型的训练样本、因果目标和生成过程。',
     goals: ['把一句文本转换为多组前缀—目标样本', '解释 causal language modeling', '连接 cross-entropy 与 perplexity'],
     sections: [
@@ -147,7 +147,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['自回归模型预测每个位置的下一个 token', 'Teacher forcing 使用真实前缀', 'Perplexity 的比较依赖 tokenizer 和评测边界'],
   },
   {
-    id: 'attention-qkv', moduleId: 'transformer', order: '04.1', title: 'Q、K、V 与 Scaled Attention', eyebrow: 'QUERY × KEY → WEIGHT × VALUE', duration: '55 分钟', level: '基础',
+    id: 'attention-qkv', moduleId: 'transformer', order: '04.1', title: 'Q、K、V 与 Scaled Attention', eyebrow: 'QUERY × KEY → WEIGHT × VALUE', duration: '30 分钟', level: '基础',
     summary: '从信息检索直觉和张量 Shape 理解一次单头 Attention。',
     goals: ['解释 Q、K、V 的不同作用', '沿 shape 推导 attention matrix', '说明缩放与 causal mask'],
     sections: [
@@ -159,7 +159,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Q/K 决定匹配，V 提供被聚合内容', 'QKᵀ 产生位置之间的分数矩阵', '缩放稳定数值，mask 保持因果性'], labHref: '/labs/?lab=attention',
   },
   {
-    id: 'transformer-forward', moduleId: 'transformer', order: '04.2', title: '一次完整 Transformer Forward', eyebrow: 'TOKENS → LOGITS', duration: '60 分钟', level: '基础',
+    id: 'transformer-forward', moduleId: 'transformer', order: '04.2', title: '一次完整 Transformer Forward', eyebrow: 'TOKENS → LOGITS', duration: '30 分钟', level: '基础',
     summary: '把 Tokenizer、Embedding、Attention、FFN、Residual、Norm 和输出层串成一条完整路径。',
     goals: ['按顺序解释 Transformer block', '说明 residual 与 normalization 的作用', '从 hidden states 走到 vocabulary logits'],
     sections: [
@@ -171,7 +171,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Embedding 把 ids 变成 hidden states', 'Attention 跨位置通信，FFN 逐位置变换', 'LM head 把 hidden states 投影为词表 logits'], labHref: '/labs/?lab=transformer',
   },
   {
-    id: 'pretraining-data-scaling', moduleId: 'pretraining', order: '05.1', title: '预训练数据、计算预算与 Scaling', eyebrow: 'DATA × MODEL × COMPUTE', duration: '55 分钟', level: '基础',
+    id: 'pretraining-data-scaling', moduleId: 'pretraining', order: '05.1', title: '预训练数据、计算预算与 Scaling', eyebrow: 'DATA × MODEL × COMPUTE', duration: '30 分钟', level: '基础',
     summary: '把数据质量、训练 token、模型规模与计算预算放进同一个可验证的训练计划。',
     goals: ['解释预训练数据管线的主要阶段', '区分参数规模、训练 token 与计算预算', '为正式训练设计小规模 pilot 和停止条件'],
     sections: [
@@ -183,7 +183,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['数据质量和混合比例属于训练配方', '模型规模与训练 token 共同消耗计算预算', '大规模训练前需要 pilot、评测和停止条件'],
   },
   {
-    id: 'sft-lora-data', moduleId: 'finetune', order: '06.1', title: 'SFT、Chat Template 与 LoRA', eyebrow: 'DATA → MASK → ADAPTER', duration: '60 分钟', level: '基础',
+    id: 'sft-lora-data', moduleId: 'finetune', order: '06.1', title: 'SFT、Chat Template 与 LoRA', eyebrow: 'DATA → MASK → ADAPTER', duration: '30 分钟', level: '基础',
     summary: '理解监督微调真正更新的目标、训练样本格式，以及 LoRA 如何降低可训练参数量。',
     goals: ['读懂一条 instruction/chat 训练样本', '解释 label masking 与模板一致性', '比较全量微调、LoRA 与 QLoRA'],
     sections: [
@@ -195,7 +195,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['模板与 loss mask 是训练目标的一部分', 'LoRA 用低秩增量减少可训练参数', '方法选择应连接错误类型与回归评测'],
   },
   {
-    id: 'preference-optimization', moduleId: 'alignment', order: '07.1', title: '偏好数据、Reward Model 与 DPO / PPO / GRPO', eyebrow: 'PREFERENCES → OBJECTIVE → POLICY', duration: '65 分钟', level: '基础',
+    id: 'preference-optimization', moduleId: 'alignment', order: '07.1', title: '偏好数据、Reward Model 与 DPO / PPO / GRPO', eyebrow: 'PREFERENCES → OBJECTIVE → POLICY', duration: '35 分钟', level: '基础',
     summary: '把偏好样本、奖励信号和策略更新拆开，避免把所有后训练方法混成一个名词。',
     goals: ['解释偏好对和 Reward Model', '比较 PPO-RLHF、DPO 与 GRPO 的流程', '识别偏好偏差与 reward hacking'],
     sections: [
@@ -207,7 +207,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['偏好数据决定被奖励的行为', 'PPO、DPO、GRPO 的数据流与更新方式不同', '后训练必须检查奖励捷径和能力退化'],
   },
   {
-    id: 'serving-prefill-decode', moduleId: 'inference', order: '08.1', title: 'Prefill、Decode 与大模型服务', eyebrow: 'LATENCY × THROUGHPUT × MEMORY', duration: '60 分钟', level: '基础',
+    id: 'serving-prefill-decode', moduleId: 'inference', order: '08.1', title: 'Prefill、Decode 与大模型服务', eyebrow: 'LATENCY × THROUGHPUT × MEMORY', duration: '30 分钟', level: '基础',
     summary: '从请求的两个计算阶段解释 KV Cache、批处理、量化和服务指标。',
     goals: ['区分 prefill 与 decode', '估算 KV Cache 的主要变量', '说明延迟、吞吐和成本的取舍'],
     sections: [
@@ -219,7 +219,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Prefill 与 Decode 的瓶颈不同', 'KV Cache 用显存换前缀重算', '服务设计要联合报告延迟、吞吐、质量和成本'], labHref: '/labs/?lab=kv',
   },
   {
-    id: 'rag-evidence-pipeline', moduleId: 'rag', order: '09.1', title: '从检索到引用：可验证 RAG', eyebrow: 'QUERY → EVIDENCE → ANSWER', duration: '60 分钟', level: '基础',
+    id: 'rag-evidence-pipeline', moduleId: 'rag', order: '09.1', title: '从检索到引用：可验证 RAG', eyebrow: 'QUERY → EVIDENCE → ANSWER', duration: '30 分钟', level: '基础',
     summary: '把文档处理、召回、重排、生成和引用拆成能够分别测量的系统。',
     goals: ['设计基础 RAG 数据流', '区分召回与生成失败', '实现引用和无答案拒答'],
     sections: [
@@ -231,7 +231,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['RAG 从需求和权限边界开始', '召回、重排和生成需要分层评测', '引用必须能回到真正支持答案的原文'], labHref: '/labs/?lab=retrieval',
   },
   {
-    id: 'agent-tools-trajectories', moduleId: 'agent', order: '10.1', title: '工具调用、状态与 Agent 轨迹', eyebrow: 'OBSERVE → DECIDE → ACT', duration: '60 分钟', level: '基础',
+    id: 'agent-tools-trajectories', moduleId: 'agent', order: '10.1', title: '工具调用、状态与 Agent 轨迹', eyebrow: 'OBSERVE → DECIDE → ACT', duration: '30 分钟', level: '基础',
     summary: '把 Agent 看成带工具、状态和停止条件的决策循环，并用轨迹而不是只用最终答案评测。',
     goals: ['判断 Agent 与固定工作流的边界', '设计清晰的工具 schema 与状态', '评测轨迹、恢复和资源成本'],
     sections: [
@@ -243,7 +243,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Agent 适用于路径需要动态选择的任务', '工具 schema、状态和停止条件构成执行边界', '评测需要覆盖结果、轨迹、恢复和成本'],
   },
   {
-    id: 'evaluation-rubric-judge', moduleId: 'evaluation', order: '11.1', title: 'Rubric、人工评测与 LLM-as-a-Judge', eyebrow: 'TARGET → MEASURE → AUDIT', duration: '60 分钟', level: '基础',
+    id: 'evaluation-rubric-judge', moduleId: 'evaluation', order: '11.1', title: 'Rubric、人工评测与 LLM-as-a-Judge', eyebrow: 'TARGET → MEASURE → AUDIT', duration: '30 分钟', level: '基础',
     summary: '从产品目标构造可复查的评测体系，并判断自动 Judge 何时可以使用。',
     goals: ['把产品目标转成指标和 rubric', '检查 Judge 的常见偏差', '建立 badcase 与人工复核闭环'],
     sections: [
@@ -255,7 +255,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['指标必须连接任务目标与错误成本', 'Judge 需要人工参考和偏差压力测试', 'Badcase、回归集和 no-call 构成可靠闭环'],
   },
   {
-    id: 'causal-interpretability', moduleId: 'interpretability', order: '12.1', title: '从可解码相关到因果干预', eyebrow: 'OBSERVE → INTERVENE → LIMIT', duration: '55 分钟', level: '基础',
+    id: 'causal-interpretability', moduleId: 'interpretability', order: '12.1', title: '从可解码相关到因果干预', eyebrow: 'OBSERVE → INTERVENE → LIMIT', duration: '30 分钟', level: '基础',
     summary: '区分激活可视化、Probe 解码和模型实际使用某个表示的因果证据。',
     goals: ['区分相关、可解码与因果使用', '设计干预和匹配对照', '说明结论的外部效度边界'],
     sections: [
@@ -267,7 +267,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['可解码性不等于因果使用', '干预需要匹配对照和副作用测量', '机制结论必须限定模型、任务与样本范围'], labHref: '/labs/?lab=attention',
   },
   {
-    id: 'sae-feature-dictionaries', moduleId: 'interpretability', order: '12.2', title: 'SAE、Superposition 与特征字典', eyebrow: 'ACTIVATIONS → SPARSE FEATURES → TEST', duration: '60 分钟', level: '基础',
+    id: 'sae-feature-dictionaries', moduleId: 'interpretability', order: '12.2', title: 'SAE、Superposition 与特征字典', eyebrow: 'ACTIVATIONS → SPARSE FEATURES → TEST', duration: '30 分钟', level: '基础',
     summary: '理解稀疏自编码器为何被用于拆解稠密激活，以及为什么“特征可命名”仍然不是机制结论。',
     goals: ['解释 superposition 与 SAE 的基本动机', '读懂重构—稀疏权衡', '把特征发现与因果验证分成两步'],
     sections: [
@@ -279,7 +279,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['SAE 学到的是候选特征字典', '代理指标用于筛选表示而非证明机制', '特征解释必须经过行为干预与外部验证'], resourceIds: ['sae-scaling', 'saebench', 'subspace-sae-2026'],
   },
   {
-    id: 'circuit-tracing', moduleId: 'interpretability', order: '12.3', title: 'Circuit Tracing 与 Attribution Graph', eyebrow: 'REPLACE → TRACE → INTERVENE', duration: '65 分钟', level: '基础',
+    id: 'circuit-tracing', moduleId: 'interpretability', order: '12.3', title: 'Circuit Tracing 与 Attribution Graph', eyebrow: 'REPLACE → TRACE → INTERVENE', duration: '35 分钟', level: '基础',
     summary: '从 attention map 走向跨层计算路径，并理解 attribution graph 为什么是机制假设而不是最终真相。',
     goals: ['区分 attention visualization 与 circuit tracing', '解释 replacement model 和 attribution edge', '设计能验证候选电路的干预'],
     sections: [
@@ -291,7 +291,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Attention map 不是完整计算路径', 'Attribution graph 是近似模型上的候选机制', '路径主张需要在原模型行为上接受干预验证'], resourceIds: ['circuit-tracing', 'mib', 'mi-axioms'],
   },
   {
-    id: 'interpretability-benchmarks', moduleId: 'interpretability', order: '12.4', title: '如何评测一个可解释性方法', eyebrow: 'PROXY → CAUSAL TASK → TRANSFER', duration: '60 分钟', level: '基础',
+    id: 'interpretability-benchmarks', moduleId: 'interpretability', order: '12.4', title: '如何评测一个可解释性方法', eyebrow: 'PROXY → CAUSAL TASK → TRANSFER', duration: '30 分钟', level: '基础',
     summary: '用 SAEBench、MIB 与机制验证标准，把“看起来可解释”拆成表示质量、因果恢复和外部迁移。',
     goals: ['识别常见代理指标测到什么', '比较 feature 与 circuit benchmark', '为方法写出可证伪的验证矩阵'],
     sections: [
@@ -303,7 +303,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['代理指标用于筛选，不直接证明机制', 'Feature 与 circuit 需要不同但相连的任务评测', '方法结论必须绑定任务、基底、模型与成本'], resourceIds: ['saebench', 'mib', 'mi-axioms'],
   },
   {
-    id: 'cot-faithfulness-monitorability', moduleId: 'interpretability', order: '12.5', title: 'CoT Faithfulness 与 Monitorability', eyebrow: 'SAYING → CAUSE → SIGNAL', duration: '55 分钟', level: '基础',
+    id: 'cot-faithfulness-monitorability', moduleId: 'interpretability', order: '12.5', title: 'CoT Faithfulness 与 Monitorability', eyebrow: 'SAYING → CAUSE → SIGNAL', duration: '30 分钟', level: '基础',
     summary: '区分“推理文本是否忠实反映原因”与“推理文本是否暴露可检测信号”，避免把 CoT 当成内部思维录像。',
     goals: ['区分 faithfulness 与 monitorability', '解释当前实验结果支持什么', '把 CoT 监控与机制分析正确组合'],
     sections: [
@@ -315,7 +315,7 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['CoT 不是内部思维录像', 'Faithfulness 与 monitorability 是不同坐标', 'CoT 监控应与行为和内部机制证据组合'], resourceIds: ['cot-faithfulness', 'cot-monitorability', 'circuit-tracing'],
   },
   {
-    id: 'project-evidence-story', moduleId: 'project', order: '13.1', title: '把项目整理成可追问的证据链', eyebrow: 'QUESTION → DECISION → EVIDENCE', duration: '50 分钟', level: '基础',
+    id: 'project-evidence-story', moduleId: 'project', order: '13.1', title: '把项目整理成可追问的证据链', eyebrow: 'QUESTION → DECISION → EVIDENCE', duration: '25 分钟', level: '基础',
     summary: '用问题、基线、决策、结果和边界组织项目，而不是按开发时间流水账复述。',
     goals: ['用一分钟定义项目问题和指标', '解释关键方案选择与替代项', '准备结果、成本、失败案例和个人贡献'],
     sections: [
