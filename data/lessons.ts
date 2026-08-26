@@ -168,7 +168,7 @@ export const foundationLessons: FoundationLesson[] = [
       { title: '最后输出词表 logits', lead: '最终 hidden state 被投影到 vocabulary 维度。', code: { language: 'text', source: 'token ids       [B, S]\nembeddings      [B, S, H]\nN × blocks      [B, S, H]\nLM head logits  [B, S, V]\nsoftmax(last)   [B, V]' }, paragraphs: ['训练时计算多个位置的 logits 与目标；生成时通常只使用最后位置的分布选择下一个 token，再把它追加到上下文。'], callout: '理解完整 forward 后，再学习 KV Cache、GQA、量化等优化会更自然，因为你知道它们改变了哪一步、保留了什么。' },
     ],
     checkpoint: { question: 'Attention 和 FFN 在 Transformer block 中分别混合什么信息？', hint: '一个跨位置，一个逐位置。', options: ['Attention 跨位置聚合，FFN 逐位置变换特征', '二者都只跨 batch 维混合', 'FFN 负责把文本切成 token', 'Attention 只负责改变词表大小'], correctIndex: 0, answer: 'Attention 让不同 token 位置之间交换和聚合信息；FFN 对每个位置独立应用相同的非线性变换，主要在特征维度内处理表示。' },
-    takeaways: ['Embedding 把 ids 变成 hidden states', 'Attention 跨位置通信，FFN 逐位置变换', 'LM head 把 hidden states 投影为词表 logits'],
+    takeaways: ['Embedding 把 ids 变成 hidden states', 'Attention 跨位置通信，FFN 逐位置变换', 'LM head 把 hidden states 投影为词表 logits'], labHref: '/labs/?lab=transformer',
   },
   {
     id: 'pretraining-data-scaling', moduleId: 'pretraining', order: '05.1', title: '预训练数据、计算预算与 Scaling', eyebrow: 'DATA × MODEL × COMPUTE', duration: '55 分钟', level: '基础',

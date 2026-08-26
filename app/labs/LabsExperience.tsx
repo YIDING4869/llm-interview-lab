@@ -11,10 +11,11 @@ import { RetrievalLab } from './RetrievalLab';
 import { SamplingLab } from './SamplingLab';
 import { TensorShapeLab } from './TensorShapeLab';
 import { TokenizerLab } from './TokenizerLab';
+import { TransformerForwardLab } from './TransformerForwardLab';
 
-type LabId = 'shapes' | 'gradient' | 'tokenizer' | 'attention' | 'sampling' | 'kv' | 'retrieval';
+type LabId = 'shapes' | 'gradient' | 'tokenizer' | 'attention' | 'sampling' | 'kv' | 'retrieval' | 'transformer';
 
-const labIds: LabId[] = ['shapes', 'gradient', 'tokenizer', 'attention', 'sampling', 'kv', 'retrieval'];
+const labIds: LabId[] = ['shapes', 'gradient', 'tokenizer', 'attention', 'sampling', 'kv', 'retrieval', 'transformer'];
 
 export function LabsExperience() {
   const [activeLab, setActiveLab] = useState<LabId>('tokenizer');
@@ -55,6 +56,7 @@ export function LabsExperience() {
         <button className={activeLab === 'sampling' ? 'active' : ''} type="button" onClick={() => selectLab('sampling')}><span>05</span><strong>Sampling Playground</strong><small>生成与随机性</small></button>
         <button className={activeLab === 'kv' ? 'active' : ''} type="button" onClick={() => selectLab('kv')}><span>06</span><strong>KV Cache Calculator</strong><small>容量与服务</small></button>
         <button className={activeLab === 'retrieval' ? 'active' : ''} type="button" onClick={() => selectLab('retrieval')}><span>07</span><strong>RAG Retrieval Lab</strong><small>召回与排序</small></button>
+        <button className={activeLab === 'transformer' ? 'active' : ''} type="button" onClick={() => selectLab('transformer')}><span>08</span><strong>Transformer Trace</strong><small>Input 到 Output</small></button>
       </nav>
 
       <div className="labs-stage">
@@ -65,6 +67,7 @@ export function LabsExperience() {
         {activeLab === 'sampling' && <SamplingLab />}
         {activeLab === 'kv' && <KvCacheLab />}
         {activeLab === 'retrieval' && <RetrievalLab />}
+        {activeLab === 'transformer' && <TransformerForwardLab />}
       </div>
       <SiteFooter />
     </main>

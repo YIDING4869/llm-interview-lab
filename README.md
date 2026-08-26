@@ -13,7 +13,7 @@
 - 可按阶段、人群和关键词筛选的课程、教程、博客与论文资源库
 - 六条岗位方向，用于主干知识完成后的进一步选择
 - 带答案结构和追问的精选面试题
-- Shape、梯度、Tokenizer、Attention、Sampling、KV Cache 与 RAG 七项可视化实验
+- Shape、梯度、Tokenizer、Attention、完整 Transformer Forward、Sampling、KV Cache 与 RAG 八项可视化实验
 - 可导出 Markdown、备份和恢复的浏览器本地进度与复盘 Notes
 - 可追溯来源的国内大模型、Agent、多模态与工程岗位面经摘要
 - 响应式布局和 PWA manifest
@@ -25,7 +25,7 @@
 - `/lessons/`：覆盖 14 个模块的站内课程、检查题与学习连接
 - `/practice/`：模块学习闭环、路线进度、检查题、动手任务和 Notes
 - `/interviews/`：国内真实面经摘要、来源边界与岗位追问模式
-- `/labs/`：七项可调节的机制与系统实验
+- `/labs/`：八项可调节的机制与系统实验
 - `/resources/`：可筛选的学习资料与每份资料对应的建议产物
 
 课程数据集中维护在 `data/curriculum.ts`，模块练习维护在 `data/practice.ts`，公共导航与页脚位于 `components/`，页面交互分别保留在对应的 `app/` 路由目录。新增模块、题目或资料时，优先修改结构化数据，而不是在页面中重复写卡片。
