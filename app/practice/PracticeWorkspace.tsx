@@ -6,6 +6,7 @@ import { SiteHeader } from '../../components/SiteHeader';
 import { entryRoutes, knowledgeModules, learningResources } from '../../data/curriculum';
 import { lessonsForModule } from '../../data/lessons';
 import { practiceQuestions } from '../../data/practice';
+import { trackEvent } from '../../lib/analytics';
 import { sitePath } from '../../lib/site-path';
 
 const stepDefinitions = [
@@ -56,7 +57,9 @@ export function PracticeWorkspace() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [answerStatus, setAnswerStatus] = useState('回答草稿会自动保存在此设备');
   const [transferStatus, setTransferStatus] = useState('');
+  const [quickstart, setQuickstart] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
+  const startedQuestionRef = useRef<number | null>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
@@ -68,7 +71,9 @@ export function PracticeWorkspace() {
       }
     }
 
-    const requestedModule = new URLSearchParams(window.location.search).get('module');
+    const params = new URLSearchParams(window.location.search);
+    const requestedModule = params.get('module');
+    setQuickstart(params.get('quickstart') === '1');
     if (requestedModule && knowledgeModules.some((module) => module.id === requestedModule)) {
       setActiveModuleId(requestedModule);
       const matchingRoute = entryRoutes.find((route) => route.sequence.includes(requestedModule));
@@ -96,6 +101,7 @@ export function PracticeWorkspace() {
   useEffect(() => {
     setSecondsLeft(secondsForQuestion(question.time));
     setTimerRunning(false);
+    startedQuestionRef.current = null;
     setAnswerStatus('回答草稿会自动保存在此设备');
   }, [question.id, question.time]);
 
@@ -105,6 +111,7 @@ export function PracticeWorkspace() {
       setSecondsLeft((current) => {
         if (current <= 1) {
           setTimerRunning(false);
+          startedQuestionRef.current = null;
           return 0;
         }
         return current - 1;
@@ -176,6 +183,32 @@ export function PracticeWorkspace() {
     }));
     setAnswerStatus(`已保存第 ${attempts.length + 1} 次作答，可以对照必答点复盘`);
     setTimerRunning(false);
+    startedQuestionRef.current = null;
+    trackEvent('practice_complete', {
+      module_id: activeModule.id,
+      question_id: question.id,
+      quickstart,
+      answer_length: answer.length,
+    });
+  };
+
+  const toggleTimer = () => {
+    if (timerRunning) {
+      setTimerRunning(false);
+      return;
+    }
+
+    if (secondsLeft === 0) setSecondsLeft(secondsForQuestion(question.time));
+    if (startedQuestionRef.current !== question.id) {
+      startedQuestionRef.current = question.id;
+      trackEvent('practice_start', { module_id: activeModule.id, question_id: question.id, quickstart });
+    }
+    setTimerRunning(true);
+  };
+
+  const beginQuickstart = () => {
+    if (!timerRunning) toggleTimer();
+    document.getElementById('answer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const toggleRubric = (index: number) => {
@@ -262,6 +295,11 @@ export function PracticeWorkspace() {
         </aside>
 
         <div className="module-cockpit">
+          {quickstart && <aside className="quickstart-banner">
+            <div><span>3 MINUTE QUICKSTART</span><strong>先完成一道 Attention 题，再看对应实验。</strong></div>
+            <ol><li><b>01</b>30 秒组织答案</li><li><b>02</b>保存并对照必答点</li><li><b>03</b>打开 Attention 实验</li></ol>
+            <button type="button" onClick={beginQuickstart}>{timerRunning ? '正在计时，继续作答' : '开始 30 秒计时'} <span>→</span></button>
+          </aside>}
           <header className="cockpit-head">
             <div><span>MODULE {activeModule.order} · {activeModule.cluster} · {activeModule.level}</span><h2>{activeModule.title}</h2><p>{activeModule.summary}</p></div>
             <div className="module-score"><strong>{finishedSteps}/4</strong><span>本模块进度</span></div>
@@ -281,21 +319,14 @@ export function PracticeWorkspace() {
             <div className="loop-panel-actions">{moduleLessons[0] && <a href={sitePath(`/lessons/?lesson=${moduleLessons[0].id}`)}>先学习 {moduleLessons.length} 节站内基础课 →</a>}<a href={sitePath(`/learn/#module-${activeModule.id}`)}>查看知识树中的模块 →</a>{moduleResources.map((resource) => <a href={resource.href} target="_blank" rel="noreferrer" key={resource.id}>{resource.title} ↗</a>)}</div>
           </section>
 
-          <section className="loop-panel answer-practice-panel">
+          <section className="loop-panel answer-practice-panel" id="answer">
             <div className="loop-panel-label"><span>02</span><strong>作答 / ANSWER</strong></div>
             <div className="checkpoint-question"><div><span>{question.category} · {question.difficulty}</span><b>{question.time}</b></div><h3>{question.title}</h3><p><strong>提示：</strong>{question.hint}</p></div>
             <div className="answer-recorder">
               <div className="answer-recorder-head"><span>YOUR ANSWER</span><strong>{formatCountdown(secondsLeft)}</strong></div>
               <textarea value={answerDraft} onChange={(event) => setAnswerDraft(event.target.value)} placeholder="先关掉标准答案，用自己的语言写下：定义 → 原理 → 取舍 → 场景。" />
               <div className="answer-recorder-actions">
-                <button type="button" onClick={() => {
-                  if (secondsLeft === 0) {
-                    setSecondsLeft(secondsForQuestion(question.time));
-                    setTimerRunning(true);
-                  } else {
-                    setTimerRunning((running) => !running);
-                  }
-                }}>{secondsLeft === 0 ? '重新计时' : timerRunning ? '暂停' : '开始计时'}</button>
+                <button type="button" onClick={toggleTimer}>{secondsLeft === 0 ? '重新计时' : timerRunning ? '暂停' : '开始计时'}</button>
                 <button type="button" className="save-attempt" disabled={!answerDraft.trim()} onClick={saveAttempt}>保存本次作答</button>
                 <span aria-live="polite">{answerStatus}</span>
               </div>

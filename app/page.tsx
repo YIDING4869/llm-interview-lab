@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
 import { entryRoutes } from '../data/curriculum';
 import { interviewRecords } from '../data/interviews';
 import { foundationLessons } from '../data/lessons';
 import { practiceCategories, practiceQuestions } from '../data/practice';
+import { trackEvent } from '../lib/analytics';
 import { sitePath } from '../lib/site-path';
 
 const roadmaps = [
@@ -44,6 +45,7 @@ export default function Home() {
   const [kvHeads, setKvHeads] = useState(8);
   const [notes, setNotes] = useState('');
   const [noteStatus, setNoteStatus] = useState('仅保存在此设备');
+  const dailyPracticeStarted = useRef(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem('llm-interview-lab-notes');
@@ -89,7 +91,13 @@ export default function Home() {
     if (secondsLeft === 0) {
       setSecondsLeft(90);
       setTimerRunning(true);
+      dailyPracticeStarted.current = true;
+      trackEvent('practice_start', { surface: 'home', module_id: dailyQuestion.moduleId, question_id: dailyQuestion.id });
       return;
+    }
+    if (!timerRunning && !dailyPracticeStarted.current) {
+      dailyPracticeStarted.current = true;
+      trackEvent('practice_start', { surface: 'home', module_id: dailyQuestion.moduleId, question_id: dailyQuestion.id });
     }
     setTimerRunning((running) => !running);
   };
@@ -111,9 +119,10 @@ export default function Home() {
             从原理理解到限时表达，从第一问到连续追问。为 LLM、Agent、后训练与推理岗位准备的一站式学习实验室。
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href={sitePath(`/lessons/?lesson=${foundationLessons[0].id}`)}>零基础从第一课开始 <span>→</span></a>
-            <a className="text-button" href={sitePath('/practice/')}>直接进入面试训练 <span>↗</span></a>
+            <a className="primary-button" href={sitePath('/practice/?module=transformer&quickstart=1#answer')}>3 分钟开始体验 <span>→</span></a>
+            <a className="text-button" href={sitePath(`/lessons/?lesson=${foundationLessons[0].id}`)}>零基础从第一课开始 <span>↗</span></a>
           </div>
+          <p className="quickstart-caption">无需注册 · 30 秒作答 · 对照答案结构 · 打开可视化实验</p>
           <dl className="hero-stats">
             <div><dt>03</dt><dd>背景入口</dd></div>
             <div><dt>{foundationLessons.length}</dt><dd>站内基础课</dd></div>

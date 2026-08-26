@@ -9,6 +9,7 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const quickstartHref = sitePath('/practice/?module=transformer&quickstart=1#answer');
   const links = [
     { id: 'learn', label: '学习地图', href: sitePath('/learn/') },
     { id: 'lessons', label: '基础课', href: sitePath('/lessons/') },
@@ -30,7 +31,7 @@ export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
           <a className={active === link.id ? 'is-active' : ''} href={link.href} key={link.id}>{link.label}</a>
         ))}
       </div>
-      <a className="nav-cta" href={sitePath('/practice/')}>继续学习 <span>↗</span></a>
+      <a className="nav-cta" href={quickstartHref}>3 分钟体验 <span>↗</span></a>
       <button
         className="nav-menu-button"
         type="button"
@@ -48,7 +49,7 @@ export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
             <span>{String(index + 1).padStart(2, '0')}</span>{link.label}
           </a>
         ))}
-        <a className="mobile-nav-cta" href={sitePath('/practice/')} onClick={() => setMenuOpen(false)}>继续学习 <span>→</span></a>
+        <a className="mobile-nav-cta" href={quickstartHref} onClick={() => setMenuOpen(false)}>3 分钟开始体验 <span>→</span></a>
       </div>
     </nav>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
+import { trackEvent } from '../../lib/analytics';
 import { sitePath } from '../../lib/site-path';
 import { AttentionMatrixLab } from './AttentionMatrixLab';
 import { GradientDescentLab } from './GradientDescentLab';
@@ -23,7 +24,9 @@ export function LabsExperience() {
 
   useEffect(() => {
     const requestedLab = new URLSearchParams(window.location.search).get('lab');
-    if (labIds.includes(requestedLab as LabId)) setActiveLab(requestedLab as LabId);
+    const initialLab = labIds.includes(requestedLab as LabId) ? requestedLab as LabId : 'tokenizer';
+    setActiveLab(initialLab);
+    trackEvent('lab_open', { lab_id: initialLab });
   }, []);
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export function LabsExperience() {
 
   function selectLab(lab: LabId) {
     setActiveLab(lab);
+    trackEvent('lab_open', { lab_id: lab });
     const url = new URL(window.location.href);
     url.searchParams.set('lab', lab);
     window.history.replaceState({}, '', url);

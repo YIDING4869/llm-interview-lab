@@ -44,3 +44,16 @@ npm run dev
 仓库包含 GitHub Pages 工作流。将代码推送到 `main` 并在仓库设置中选择 GitHub Actions 作为 Pages 发布源后，网站会发布到：
 
 `https://yiding4869.github.io/llm-interview-lab/`
+
+## 推广链接与最小事件
+
+建议把不同渠道都指向“3 分钟体验”，并使用独立 UTM：
+
+- 知乎：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=zhihu&utm_medium=content&utm_campaign=launch_2026&utm_content=transformer_article#answer`
+- 牛客：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=nowcoder&utm_medium=community&utm_campaign=launch_2026&utm_content=interview_post#answer`
+- B 站：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=bilibili&utm_medium=video&utm_campaign=launch_2026&utm_content=transformer_demo#answer`
+- 小红书：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=xiaohongshu&utm_medium=social&utm_campaign=launch_2026&utm_content=roadmap_cards#answer`
+
+站内会生成四个不包含答案正文的最小事件：`site_enter`、`practice_start`、`practice_complete`、`lab_open`。在未配置集中分析服务时，最近 100 条事件保存在浏览器的 `llm-interview-lab-events-v1` 本地记录中；配置 Google Analytics 后，同一批事件会自动上报。
+
+本地构建可在 `.env` 中设置 `NEXT_PUBLIC_GA_MEASUREMENT_ID`。GitHub Pages 使用仓库变量 `GA_MEASUREMENT_ID`，无需把公开 Measurement ID 写进源码。

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { AnalyticsBootstrap } from '../components/AnalyticsBootstrap';
 import './globals.css';
 
 const siteUrl = 'https://yiding4869.github.io/llm-interview-lab/';
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -31,7 +33,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <head>
+        {gaMeasurementId && <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`} />}
+        {gaMeasurementId && <script dangerouslySetInnerHTML={{ __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}window.gtag=gtag;gtag('js',new Date());gtag('config',${JSON.stringify(gaMeasurementId)});` }} />}
+      </head>
+      <body><AnalyticsBootstrap />{children}</body>
     </html>
   );
 }

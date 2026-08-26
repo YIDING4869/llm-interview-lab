@@ -37,6 +37,7 @@ jobs:
         env:
           NEXT_PUBLIC_SITE_URL: https://yiding4869.github.io/llm-interview-lab/
           NEXT_PUBLIC_BASE_PATH: /llm-interview-lab
+          NEXT_PUBLIC_GA_MEASUREMENT_ID: ${{ vars.GA_MEASUREMENT_ID }}
         run: npm run build
 
       - name: Place base-path assets at the Pages artifact root
