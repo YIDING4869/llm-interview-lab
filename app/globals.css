@@ -646,15 +646,17 @@ main {
 .interview-focus-filter button:hover, .interview-focus-filter button.active { color: var(--blue); background: #eef1ff; }
 .interview-focus-filter button.active { box-shadow: inset 3px 0 0 var(--blue); }
 .interview-focus-filter button b { min-width: 24px; padding: 4px 6px; border-radius: 99px; color: #747e91; background: #eff0f3; font: 800 10px/1 ui-monospace, monospace; text-align: center; }
-.interview-guide-toggle { width: 100%; min-height: 68px; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px 20px; border: 0; border-top: 1px solid var(--line); color: #566177; background: #f6f7fb; text-align: left; cursor: pointer; }
-.interview-guide-toggle span, .interview-guide-toggle b, .interview-guide-toggle small { display: block; }
-.interview-guide-toggle b { color: var(--ink); font-size: 11px; }
-.interview-guide-toggle small { margin-top: 5px; color: #7d8699; font-size: 9px; }
-.interview-guide-toggle strong { min-width: 34px; padding: 7px 8px; border-radius: 99px; color: var(--blue); background: #e5eaff; font: 850 11px/1 ui-monospace, monospace; text-align: center; }
-.interview-guide-toggle.active { color: white; background: var(--blue); }
-.interview-guide-toggle.active b { color: white; }
-.interview-guide-toggle.active small { color: #dbe2ff; }
-.interview-guide-toggle.active strong { color: var(--ink); background: var(--acid); }
+.interview-guide-filter { display: grid; gap: 6px; padding: 18px 20px 20px; border-top: 1px solid var(--line); background: #f6f7fb; }
+.interview-guide-filter > span { margin-bottom: 5px; color: #707a8f; }
+.interview-guide-filter button { min-height: 55px; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 11px; border: 1px solid #d7dbe4; border-radius: 7px; color: #566177; background: white; text-align: left; cursor: pointer; }
+.interview-guide-filter button span, .interview-guide-filter button b, .interview-guide-filter button small { display: block; }
+.interview-guide-filter button b { color: var(--ink); font-size: 10px; }
+.interview-guide-filter button small { margin-top: 4px; color: #858ea0; font-size: 8px; }
+.interview-guide-filter button strong { min-width: 30px; padding: 6px 7px; border-radius: 99px; color: var(--blue); background: #e7ebff; font: 850 10px/1 ui-monospace, monospace; text-align: center; }
+.interview-guide-filter button.active { border-color: var(--blue); background: var(--blue); }
+.interview-guide-filter button.active b { color: white; }
+.interview-guide-filter button.active small { color: #dbe2ff; }
+.interview-guide-filter button.active strong { color: var(--ink); background: var(--acid); }
 .interview-practice-filter { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 18px 21px 21px; border-top: 1px solid var(--line); }
 .interview-practice-filter > span { grid-column: 1 / -1; margin-bottom: 5px; color: #707a8f; }
 .interview-practice-filter button { min-height: 48px; display: grid; place-items: center; gap: 4px; border: 1px solid #d7dbe4; border-radius: 7px; color: #687389; background: #fafaf8; font-size: 10px; font-weight: 800; cursor: pointer; }
@@ -683,6 +685,7 @@ main {
 .real-question-card > div:first-child span:first-child { margin-right: auto; color: var(--blue); }
 .real-question-card small { margin-top: 19px; color: #747e91; font-size: 10px; font-weight: 750; line-height: 1.5; }
 .real-question-guide-badge { display: inline-block; margin-left: 8px; padding: 4px 6px; border-radius: 4px; color: #2947b7; background: #e7ebff; font: 850 8px/1 ui-monospace, monospace; vertical-align: 1px; }
+.real-question-guide-badge.project { color: #7b3f13; background: #ffead7; }
 .real-question-card h3 { margin: 13px 0 24px; font-size: 16px; line-height: 1.55; letter-spacing: -.018em; }
 .real-question-card > div:last-child { display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 15px; border-top: 1px solid #eceef2; }
 .real-question-card a, .real-question-card button { border: 0; padding: 0; color: #667188; background: transparent; font-family: inherit; font-size: 10px; font-weight: 800; line-height: 1.4; cursor: pointer; }
