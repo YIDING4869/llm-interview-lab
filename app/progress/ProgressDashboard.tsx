@@ -11,6 +11,7 @@ import { mockInterviewTracks } from '../../data/mock-interviews';
 import { practiceQuestions } from '../../data/practice';
 import { interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
 import { readLastLearningActivity } from '../../lib/learning-activity';
+import { recommendationForMockReport } from '../../lib/mock-interview-recommendation';
 import { emptyMockInterviewStorage, mockInterviewStorageKey, type MockInterviewStorage } from '../../lib/mock-interview';
 import { sitePath } from '../../lib/site-path';
 
@@ -204,8 +205,11 @@ export function ProgressDashboard() {
     } else if (lastActivity?.type === 'mock') {
       const track = mockInterviewTracks.find((item) => item.id === lastActivity.trackId);
       if (track) {
-        nextTitle = track.title;
-        nextDetail = mockInterview.active?.trackId === track.id && mockInterview.active.stage !== 'report' ? '继续未完成的整场模拟与连续追问。' : '重新开始一场 5 道主问题与连续追问。';
+        const unfinished = mockInterview.active?.trackId === track.id && mockInterview.active.stage !== 'report';
+        const latestReport = [...mockInterview.reports].reverse().find((report) => report.trackId === track.id);
+        const recommendation = latestReport ? recommendationForMockReport(latestReport) : null;
+        nextTitle = unfinished ? track.title : recommendation ? recommendation.title : track.title;
+        nextDetail = unfinished ? '继续未完成的整场模拟与连续追问。' : recommendation ? `${track.title}最近一场优先补“${recommendation.rubricTitle}”；先做单题热身，再进入轮换题单。` : '开始一场 5 道主问题与连续追问。';
         nextHref = '/mock/';
       }
     }

@@ -7,6 +7,7 @@ import { mockInterviewQuestionSet, mockInterviewTracks, mockInterviewVariantCoun
 import { trackEvent } from '../../lib/analytics';
 import { interviewAnswerRubric } from '../../lib/interview-practice';
 import { saveLastLearningActivity } from '../../lib/learning-activity';
+import { recommendationForMockReport } from '../../lib/mock-interview-recommendation';
 import { emptyMockInterviewStorage, mockInterviewStorageKey, type MockAnswer, type MockInterviewStorage, type MockReport, type MockSession } from '../../lib/mock-interview';
 import { sitePath } from '../../lib/site-path';
 
@@ -104,7 +105,11 @@ export function MockInterviewWorkspace() {
   const currentQuestion = session ? questions[session.currentIndex] : null;
   const currentAnswer = session ? session.answers[answerKey(session.currentIndex)] ?? {} : {};
   const currentReport = session?.stage === 'report' ? storage.reports.find((report) => report.id === session.id) ?? buildReport(session, questions.length) : null;
-  const lowestRubricIndex = currentReport ? currentReport.rubricCounts.reduce((lowest, count, index, counts) => count < counts[lowest] ? index : lowest, 0) : 0;
+  const recommendation = currentReport ? recommendationForMockReport(currentReport) : null;
+  const focusQuestionIndex = recommendation && session ? Math.max(questions.findIndex((_, index) => !session.answers[answerKey(index)]?.mainRubric?.[recommendation.rubricIndex]), 0) : 0;
+  const focusQuestion = questions[focusQuestionIndex];
+  const focusQuestionHref = focusQuestion ? `/interviews/?record=${focusQuestion.recordId}&prompt=${focusQuestion.promptIndex + 1}#question-trainer` : '/interviews/#real-questions';
+  const nextVariant = nextVariantIndex(storage.reports, session?.trackId ?? selectedTrackId);
 
   const updateAnswer = (patch: Partial<MockAnswer>) => {
     if (!session) return;
@@ -259,12 +264,13 @@ export function MockInterviewWorkspace() {
         </article>
       </section>}
 
-      {session?.stage === 'report' && currentReport && <section className="mock-report">
+      {session?.stage === 'report' && currentReport && recommendation && <section className="mock-report">
         <header><div><span>LOCAL MOCK REPORT · 题单 {mockInterviewVariantLabel(activeVariantIndex)}</span><h1>{activeTrack.title}<br /><em>本机复盘报告</em></h1><p>这不是模型评分。它只汇总你实际完成的回答、表达长度和自评，用于决定下一轮练什么。</p></div><div><strong>{currentReport.mainCompleted}<b>/5</b></strong><span>主问题完成</span><strong>{currentReport.followupsCompleted}<b>/5</b></strong><span>追问完成</span></div></header>
-        <div className="mock-report-metrics"><article><span>主答平均长度</span><strong>{currentReport.averageMainLength}<b> 字</b></strong><p>长度不代表质量，只用于发现回答过短或失控。</p></article><article><span>追问平均长度</span><strong>{currentReport.averageFollowupLength}<b> 字</b></strong><p>追问应比主答更直接，并补新证据。</p></article><article><span>下一轮优先项</span><strong>{interviewAnswerRubric[lowestRubricIndex].title}</strong><p>来自四项自评中勾选最少的一项。</p></article></div>
+        <div className="mock-report-metrics"><article><span>主答平均长度</span><strong>{currentReport.averageMainLength}<b> 字</b></strong><p>长度不代表质量，只用于发现回答过短或失控。</p></article><article><span>追问平均长度</span><strong>{currentReport.averageFollowupLength}<b> 字</b></strong><p>追问应比主答更直接，并补新证据。</p></article><article><span>下一轮优先项</span><strong>{recommendation.rubricTitle}</strong><p>来自四项自评中勾选最少的一项，不是模型质量评分。</p></article></div>
         <section className="mock-rubric-report"><div><span>SELF REVIEW</span><h2>五道主回答里，你自评做到了几次？</h2></div><div>{interviewAnswerRubric.map((item, index) => <article key={item.title}><span>{item.title}</span><strong>{currentReport.rubricCounts[index]}<b>/5</b></strong><i><b style={{ width: `${currentReport.rubricCounts[index] * 20}%` }} /></i><p>{item.detail}</p></article>)}</div></section>
+        <section className="mock-prescription"><header><div><span>NEXT PRESCRIPTION</span><h2>{recommendation.title}</h2></div><p>{recommendation.diagnosis}</p></header><div className="mock-prescription-grid"><article><span>01 · 单题热身</span><strong>{focusQuestion?.guide.label ?? '第一道主问题'}</strong><p>{recommendation.drill}</p><a href={sitePath(focusQuestionHref)}>先做 3 分钟补练 →</a></article><article><span>02 · 下一场约束</span><strong>{activeTrack.title} · 题单 {mockInterviewVariantLabel(nextVariant)}</strong><p>{recommendation.nextRule}</p><button type="button" onClick={() => startSession(session.trackId)}>按处方开始下一场 <b>→</b></button></article></div><small>推荐仅使用当前设备上的完成度和你的自评，不读取答案正文，也不代表 AI 对答案质量的判断。</small></section>
         <section className="mock-question-report"><div><span>QUESTION REVIEW</span><h2>逐题回看完成情况。</h2></div><ol>{questions.map((question, index) => { const answer = session.answers[answerKey(index)] ?? {}; return <li key={`${question.recordId}-${question.promptIndex}`}><span>{String(index + 1).padStart(2, '0')}</span><div><small>{question.record.company} · {question.guide.track}</small><strong>{question.prompt}</strong><p>主答 {answer.mainSavedAt ? `${answer.mainDraft?.trim().length ?? 0} 字 · 自评 ${answer.mainRubric?.filter(Boolean).length ?? 0}/4` : '未完成'} · 追问 {answer.followupSavedAt ? `${answer.followupDraft?.trim().length ?? 0} 字` : '未完成'}</p></div><a href={sitePath(`/interviews/?record=${question.recordId}&prompt=${question.promptIndex + 1}#question-trainer`)}>单题复练 →</a></li>; })}</ol></section>
-        <div className="mock-report-actions"><button type="button" onClick={() => startSession(session.trackId)}>换一套继续练 <span>→</span></button><button type="button" onClick={clearActive}>更换岗位方向</button><a href={sitePath('/progress/')}>查看全部本机进度 →</a></div>
+        <div className="mock-report-actions"><button type="button" onClick={clearActive}>更换岗位方向</button><a href={sitePath('/progress/')}>查看全部本机进度 →</a></div>
       </section>}
 
       <SiteFooter />
