@@ -8,10 +8,21 @@ export type InterviewAttempt = {
   rubric: boolean[];
 };
 
+export type InterviewFollowupAttempt = {
+  answer: string;
+  savedAt: string;
+};
+
+export type InterviewFollowupProgress = {
+  draft?: string;
+  attempts?: InterviewFollowupAttempt[];
+};
+
 export type InterviewQuestionProgress = {
   draft?: string;
   attempts?: InterviewAttempt[];
   rubric?: boolean[];
+  followups?: Record<string, InterviewFollowupProgress>;
 };
 
 export type InterviewPracticeProgress = Record<string, InterviewQuestionProgress>;

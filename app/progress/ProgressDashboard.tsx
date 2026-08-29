@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { knowledgeModules } from '../../data/curriculum';
+import { guideForInterviewQuestion } from '../../data/interview-guides';
 import { interviewPromptCount, interviewRecords } from '../../data/interviews';
 import { foundationLessons, lessonsForModule } from '../../data/lessons';
 import { practiceQuestions } from '../../data/practice';
@@ -25,6 +26,7 @@ type ProgressSummary = {
   savedAttempts: number;
   structuredAttempts: number;
   interviewAttempts: number;
+  followupAttempts: number;
   interviewQuestions: number;
   nextTitle: string;
   nextDetail: string;
@@ -65,6 +67,7 @@ const emptySummary: ProgressSummary = {
   savedAttempts: 0,
   structuredAttempts: 0,
   interviewAttempts: 0,
+  followupAttempts: 0,
   interviewQuestions: 0,
   nextTitle: foundationLessons[0].title,
   nextDetail: '从第一节站内课建立程序、数学与模型直觉。',
@@ -101,6 +104,7 @@ export function ProgressDashboard() {
       return total + (questionAttempts || item?.attempts?.length || 0);
     }, 0);
     const interviewAttempts = Object.values(interviewPractice).reduce((total, item) => total + (item.attempts?.length ?? 0), 0);
+    const followupAttempts = Object.values(interviewPractice).reduce((total, item) => total + Object.values(item.followups ?? {}).reduce((count, followup) => count + (followup.attempts?.length ?? 0), 0), 0);
     const interviewQuestions = Object.values(interviewPractice).filter((item) => (item.attempts?.length ?? 0) > 0).length;
 
     const nextModuleRows = knowledgeModules.map((module) => {
@@ -148,6 +152,14 @@ export function ProgressDashboard() {
         for (const attempt of item?.attempts ?? []) {
           nextRecentAttempts.push({ id: `interview-${record.id}-${promptIndex}-${attempt.savedAt}`, title: prompt, context: `${record.company} · 真实面经`, savedAt: attempt.savedAt, href: `/interviews/?record=${record.id}&prompt=${promptIndex + 1}#question-trainer` });
         }
+        const guide = guideForInterviewQuestion(record.id, promptIndex);
+        for (const [followupIndex, followupProgress] of Object.entries(item?.followups ?? {})) {
+          const followup = guide?.followups[Number(followupIndex)];
+          if (!followup) continue;
+          for (const attempt of followupProgress.attempts ?? []) {
+            nextRecentAttempts.push({ id: `interview-followup-${record.id}-${promptIndex}-${followupIndex}-${attempt.savedAt}`, title: followup, context: `${record.company} · 连续追问`, savedAt: attempt.savedAt, href: `/interviews/?record=${record.id}&prompt=${promptIndex + 1}#question-trainer` });
+          }
+        }
       });
     }
     nextRecentAttempts.sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt));
@@ -191,9 +203,10 @@ export function ProgressDashboard() {
         lessonsDone: Object.values(lessons).filter(Boolean).length,
         learningActions,
         modulesComplete,
-        savedAttempts: structuredAttempts + interviewAttempts,
+        savedAttempts: structuredAttempts + interviewAttempts + followupAttempts,
         structuredAttempts,
         interviewAttempts,
+        followupAttempts,
         interviewQuestions,
         nextTitle,
         nextDetail,
@@ -221,7 +234,7 @@ export function ProgressDashboard() {
         <div><span>课程完成</span><strong>{summary.lessonsDone}<b> / {foundationLessons.length}</b></strong><p>通过检查题或手动标记的站内课程</p></div>
         <div><span>学习动作</span><strong>{summary.learningActions}<b> / {knowledgeModules.length * 4}</b></strong><p>理解、作答、动手与复盘</p></div>
         <div><span>闭环模块</span><strong>{summary.modulesComplete}<b> / {knowledgeModules.length}</b></strong><p>四个学习动作全部完成的模块</p></div>
-        <div><span>保存作答</span><strong>{summary.savedAttempts}<b> 次</b></strong><p>结构题 {summary.structuredAttempts} 次 · 面经真题 {summary.interviewAttempts} 次（{summary.interviewQuestions}/{interviewPromptCount} 题）</p></div>
+        <div><span>保存作答</span><strong>{summary.savedAttempts}<b> 次</b></strong><p>结构题 {summary.structuredAttempts} · 面经主答 {summary.interviewAttempts} · 连续追问 {summary.followupAttempts}（{summary.interviewQuestions}/{interviewPromptCount} 题）</p></div>
       </section>
 
       <section className="progress-detail-section">

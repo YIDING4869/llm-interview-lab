@@ -29,8 +29,14 @@ export function InterviewLibrary() {
   const [secondsLeft, setSecondsLeft] = useState(90);
   const [timerRunning, setTimerRunning] = useState(false);
   const [practiceStatus, setPracticeStatus] = useState('草稿自动保存在当前设备');
+  const [activeFollowupIndex, setActiveFollowupIndex] = useState<number | null>(null);
+  const [followupSecondsLeft, setFollowupSecondsLeft] = useState(60);
+  const [followupTimerRunning, setFollowupTimerRunning] = useState(false);
+  const [followupStatus, setFollowupStatus] = useState('选择一个追问，开始第二轮作答');
+  const [calibrationOpen, setCalibrationOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const trainerRef = useRef<HTMLElement>(null);
+  const followupRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(interviewPracticeStorageKey);
@@ -69,6 +75,20 @@ export function InterviewLibrary() {
     return () => window.clearInterval(timer);
   }, [timerRunning]);
 
+  useEffect(() => {
+    if (!followupTimerRunning) return;
+    const timer = window.setInterval(() => {
+      setFollowupSecondsLeft((current) => {
+        if (current <= 1) {
+          setFollowupTimerRunning(false);
+          return 0;
+        }
+        return current - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [followupTimerRunning]);
+
   const filteredRecords = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return interviewRecords.filter((record) => {
@@ -99,6 +119,7 @@ export function InterviewLibrary() {
   const activeProgress = activeQuestionKey ? practiceProgress[activeQuestionKey] ?? {} : {};
   const practicedQuestionCount = Object.values(practiceProgress).filter((item) => (item.attempts?.length ?? 0) > 0).length;
   const savedAttemptCount = Object.values(practiceProgress).reduce((total, item) => total + (item.attempts?.length ?? 0), 0);
+  const savedFollowupAttemptCount = Object.values(practiceProgress).reduce((total, item) => total + Object.values(item.followups ?? {}).reduce((count, followup) => count + (followup.attempts?.length ?? 0), 0), 0);
   const matchingPracticedCount = matchingQuestions.filter(({ record, promptIndex }) => (practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) > 0).length;
   const nextUnpracticedQuestion = matchingQuestions.find(({ record, promptIndex }) => (practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) === 0);
   const activeGuide = activeQuestion ? guideForInterviewQuestion(activeQuestion.record.id, activeQuestion.promptIndex) : null;
@@ -109,6 +130,8 @@ export function InterviewLibrary() {
     ? '先给项目结论，再补：\n1. 问题、约束和本人职责\n2. baseline、关键干预与为什么这样选\n3. 指标证据、badcase 和仍未验证的边界'
     : '先直接回答，再补：\n1. 输入与关键机制\n2. 收益、代价和适用条件\n3. 指标、项目证据或失败边界';
   const activeAttempts = activeProgress.attempts ?? [];
+  const activeFollowupProgress = activeFollowupIndex === null ? undefined : activeProgress.followups?.[String(activeFollowupIndex)];
+  const activeFollowupAttempts = activeFollowupProgress?.attempts ?? [];
   const previousAttempt = activeAttempts.at(-2);
   const latestAttempt = activeAttempts.at(-1);
   const previousScore = previousAttempt?.rubric.filter(Boolean).length ?? 0;
@@ -122,6 +145,9 @@ export function InterviewLibrary() {
     const hasSavedAttempt = (questionProgress?.attempts?.length ?? 0) > 0;
     const hasDraft = Boolean(questionProgress?.draft?.trim());
     setActiveQuestionKey(key);
+    setActiveFollowupIndex(null);
+    setFollowupTimerRunning(false);
+    setCalibrationOpen(false);
     setSecondsLeft(90);
     setTimerRunning(!hasSavedAttempt && !hasDraft);
     setPracticeStatus(hasSavedAttempt ? '已载入历史答案；清空草稿后再开始独立复答' : hasDraft ? '已载入未完成草稿，可继续计时' : '90 秒计时已开始，先完成第一版');
@@ -143,6 +169,9 @@ export function InterviewLibrary() {
     }));
     setSecondsLeft(90);
     setTimerRunning(true);
+    setActiveFollowupIndex(null);
+    setFollowupTimerRunning(false);
+    setCalibrationOpen(false);
     setPracticeStatus('新一轮已开始：旧答案保留在历史中，当前草稿已清空');
     saveLastLearningActivity({ type: 'interview', recordId: activeQuestion.record.id, promptIndex: activeQuestion.promptIndex });
     trackEvent('practice_start', { surface: 'interview', record_id: activeQuestion.record.id, prompt_index: activeQuestion.promptIndex + 1, repeat: activeAttempts.length > 0 });
@@ -172,6 +201,9 @@ export function InterviewLibrary() {
   };
 
   const toggleTimer = () => {
+    setFollowupTimerRunning(false);
+    setActiveFollowupIndex(null);
+    setCalibrationOpen(false);
     if (secondsLeft === 0) {
       setSecondsLeft(90);
       setTimerRunning(true);
@@ -193,6 +225,7 @@ export function InterviewLibrary() {
       },
     }));
     setTimerRunning(false);
+    setCalibrationOpen(Boolean(activeGuide));
     setPracticeStatus(`已保存第 ${(activeProgress.attempts?.length ?? 0) + 1} 次作答；现在${activeGuide ? '解锁题级参考并' : ''}对照骨架补漏`);
     saveLastLearningActivity({ type: 'interview', recordId: activeQuestion.record.id, promptIndex: activeQuestion.promptIndex });
     trackEvent('practice_complete', {
@@ -201,6 +234,105 @@ export function InterviewLibrary() {
       prompt_index: activeQuestion.promptIndex + 1,
       answer_length: answer.length,
       attempt_number: (activeProgress.attempts?.length ?? 0) + 1,
+    });
+  };
+
+  const openFollowup = (followupIndex: number) => {
+    if (!activeQuestion || !activeGuide || activeAttempts.length === 0) return;
+    const progress = activeProgress.followups?.[String(followupIndex)];
+    const hasSavedAttempt = (progress?.attempts?.length ?? 0) > 0;
+    const hasDraft = Boolean(progress?.draft?.trim());
+    setTimerRunning(false);
+    setCalibrationOpen(true);
+    setActiveFollowupIndex(followupIndex);
+    setFollowupSecondsLeft(60);
+    setFollowupTimerRunning(!hasSavedAttempt && !hasDraft);
+    setFollowupStatus(hasSavedAttempt ? '已载入追问历史；清空后可独立复答' : hasDraft ? '已载入未完成的追问草稿' : '60 秒追问已开始');
+    if (!hasSavedAttempt && !hasDraft) {
+      trackEvent('practice_start', { surface: 'interview_followup', record_id: activeQuestion.record.id, prompt_index: activeQuestion.promptIndex + 1, followup_index: followupIndex + 1 });
+    }
+    queueMicrotask(() => followupRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  };
+
+  const beginFreshFollowup = () => {
+    if (!activeQuestion || activeFollowupIndex === null || !activeQuestionKey) return;
+    const followupKey = String(activeFollowupIndex);
+    setPracticeProgress((current) => {
+      const questionProgress = current[activeQuestionKey] ?? {};
+      return {
+        ...current,
+        [activeQuestionKey]: {
+          ...questionProgress,
+          followups: {
+            ...(questionProgress.followups ?? {}),
+            [followupKey]: { ...(questionProgress.followups?.[followupKey] ?? {}), draft: '' },
+          },
+        },
+      };
+    });
+    setFollowupSecondsLeft(60);
+    setFollowupTimerRunning(true);
+    setFollowupStatus('新一轮追问已开始，旧答案仍保留在历史中');
+    trackEvent('practice_start', { surface: 'interview_followup', record_id: activeQuestion.record.id, prompt_index: activeQuestion.promptIndex + 1, followup_index: activeFollowupIndex + 1, repeat: activeFollowupAttempts.length > 0 });
+  };
+
+  const setFollowupDraft = (draft: string) => {
+    if (activeFollowupIndex === null || !activeQuestionKey) return;
+    const followupKey = String(activeFollowupIndex);
+    setPracticeProgress((current) => {
+      const questionProgress = current[activeQuestionKey] ?? {};
+      return {
+        ...current,
+        [activeQuestionKey]: {
+          ...questionProgress,
+          followups: {
+            ...(questionProgress.followups ?? {}),
+            [followupKey]: { ...(questionProgress.followups?.[followupKey] ?? {}), draft },
+          },
+        },
+      };
+    });
+  };
+
+  const toggleFollowupTimer = () => {
+    if (followupSecondsLeft === 0) {
+      setFollowupSecondsLeft(60);
+      setFollowupTimerRunning(true);
+      return;
+    }
+    setFollowupTimerRunning((running) => !running);
+  };
+
+  const saveFollowupAttempt = () => {
+    if (!activeQuestion || activeFollowupIndex === null || !activeQuestionKey) return;
+    const answer = activeFollowupProgress?.draft?.trim();
+    if (!answer) return;
+    const followupKey = String(activeFollowupIndex);
+    const attempt = { answer, savedAt: new Date().toISOString() };
+    setPracticeProgress((current) => {
+      const questionProgress = current[activeQuestionKey] ?? {};
+      const followupProgress = questionProgress.followups?.[followupKey] ?? {};
+      return {
+        ...current,
+        [activeQuestionKey]: {
+          ...questionProgress,
+          followups: {
+            ...(questionProgress.followups ?? {}),
+            [followupKey]: { ...followupProgress, attempts: [...(followupProgress.attempts ?? []), attempt].slice(-8) },
+          },
+        },
+      };
+    });
+    setFollowupTimerRunning(false);
+    setFollowupStatus(`已保存第 ${activeFollowupAttempts.length + 1} 次追问回答；检查是否补了具体证据和边界`);
+    saveLastLearningActivity({ type: 'interview', recordId: activeQuestion.record.id, promptIndex: activeQuestion.promptIndex });
+    trackEvent('practice_complete', {
+      surface: 'interview_followup',
+      record_id: activeQuestion.record.id,
+      prompt_index: activeQuestion.promptIndex + 1,
+      followup_index: activeFollowupIndex + 1,
+      answer_length: answer.length,
+      attempt_number: activeFollowupAttempts.length + 1,
     });
   };
 
@@ -253,7 +385,7 @@ export function InterviewLibrary() {
               {activeQuestion ? <>
                 <header>
                   <div><span>90-SECOND INTERVIEW PRACTICE</span><small>{activeQuestion.record.company} · {activeQuestion.record.role}</small></div>
-                  <strong>{practicedQuestionCount} / {interviewPromptCount} 已练 · {savedAttemptCount} 次作答</strong>
+                  <strong>{practicedQuestionCount} / {interviewPromptCount} 已练 · 主答 {savedAttemptCount} · 追问 {savedFollowupAttemptCount}</strong>
                   <h2>{activeQuestion.prompt}</h2>
                 </header>
                 <div className="interview-practice-grid">
@@ -264,12 +396,19 @@ export function InterviewLibrary() {
                       <div className="answer-recorder-actions"><button type="button" onClick={toggleTimer}>{secondsLeft === 0 ? '重新计时' : timerRunning ? '暂停' : '继续计时'}</button>{(activeAttempts.length > 0 || activeProgress.draft?.trim()) && <button type="button" onClick={beginFreshAttempt}>清空草稿，开始新一轮</button>}<button className="save-attempt" type="button" disabled={!activeProgress.draft?.trim()} onClick={saveAttempt}>保存本次作答</button><span aria-live="polite">{practiceStatus}</span></div>
                     </div>
                     {activeGuide && activeAttempts.length === 0 && <div className="interview-calibration-lock"><span>{activeGuide.track.toUpperCase()} · REFERENCE LOCKED</span><strong>保存第一版后解锁「{activeGuide.label}」题级参考</strong><p>先独立组织一次答案，再看 30 秒示范、2 分钟展开、常见误区和追问。这里不会记录或上报你的答案正文。</p></div>}
-                    {activeGuide && activeAttempts.length > 0 && <details className="interview-calibration">
+                    {activeGuide && activeAttempts.length > 0 && <details className="interview-calibration" open={calibrationOpen} onToggle={(event) => setCalibrationOpen(event.currentTarget.open)}>
                       <summary><span>{activeGuide.track.toUpperCase()} · {activeGuide.label}</span><b>首答后已解锁</b></summary>
                       <div className="interview-calibration-body">
                         <section><span>30 秒参考回答</span><p>{activeGuide.shortAnswer}</p></section>
                         <section><span>2 分钟结构化展开</span><ol>{activeGuide.deepDive.map((item) => <li key={item}>{item}</li>)}</ol></section>
-                        <div className="interview-calibration-columns"><section><span>常见失分点</span><ul>{activeGuide.mistakes.map((item) => <li key={item}>{item}</li>)}</ul></section><section><span>继续追问</span><ol>{activeGuide.followups.map((item) => <li key={item}>{item}</li>)}</ol></section></div>
+                        <div className="interview-calibration-columns"><section><span>常见失分点</span><ul>{activeGuide.mistakes.map((item) => <li key={item}>{item}</li>)}</ul></section><section className="interview-followup-list"><span>继续追问 · 点击进入第二轮</span><ol>{activeGuide.followups.map((item, index) => { const attemptCount = activeProgress.followups?.[String(index)]?.attempts?.length ?? 0; return <li key={item}><p>{item}</p><button type="button" className={activeFollowupIndex === index ? 'active' : ''} onClick={() => openFollowup(index)}>{attemptCount > 0 ? `复答 · ${attemptCount} 次` : '60 秒回答'} <b>→</b></button></li>; })}</ol></section></div>
+                        {activeFollowupIndex !== null && activeGuide.followups[activeFollowupIndex] && <section className="interview-followup-practice" ref={followupRef}>
+                          <header><div><span>FOLLOW-UP {String(activeFollowupIndex + 1).padStart(2, '0')} / {String(activeGuide.followups.length).padStart(2, '0')}</span><strong>{activeGuide.followups[activeFollowupIndex]}</strong></div><b>{formatCountdown(followupSecondsLeft)}</b></header>
+                          <p>先直接回应追问，再补一个具体证据、取舍或失败边界。不要重复第一轮的完整答案。</p>
+                          <textarea aria-label="面经连续追问作答" value={activeFollowupProgress?.draft ?? ''} onChange={(event) => setFollowupDraft(event.target.value)} placeholder={'用 60 秒回答：\n1. 一句话回应追问\n2. 给出数字、实验、实现细节或反例\n3. 说明适用条件与尚未验证的边界'} />
+                          <div className="interview-followup-actions"><button type="button" onClick={toggleFollowupTimer}>{followupSecondsLeft === 0 ? '重新计时' : followupTimerRunning ? '暂停' : '继续计时'}</button>{(activeFollowupAttempts.length > 0 || activeFollowupProgress?.draft?.trim()) && <button type="button" onClick={beginFreshFollowup}>清空并独立复答</button>}<button className="save" type="button" disabled={!activeFollowupProgress?.draft?.trim()} onClick={saveFollowupAttempt}>保存追问回答</button>{activeFollowupIndex < activeGuide.followups.length - 1 && <button type="button" onClick={() => openFollowup(activeFollowupIndex + 1)}>下一个追问 →</button>}<span aria-live="polite">{followupStatus}</span></div>
+                          {activeFollowupAttempts.length > 0 && <details className="interview-followup-history"><summary>查看追问历史 · {activeFollowupAttempts.length} 次 <span>＋</span></summary><ol>{[...activeFollowupAttempts].reverse().map((attempt, index) => <li key={`${attempt.savedAt}-${index}`}><span>{new Date(attempt.savedAt).toLocaleString('zh-CN')}</span><p>{attempt.answer}</p></li>)}</ol></details>}
+                        </section>}
                         <small>这是帮助校准结构与技术边界的参考，不是唯一标准答案；请用自己的项目证据替换通用表述。</small>
                       </div>
                     </details>}
