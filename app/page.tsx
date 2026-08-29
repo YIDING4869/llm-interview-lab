@@ -6,6 +6,7 @@ import { SiteHeader } from '../components/SiteHeader';
 import { entryRoutes, knowledgeModules } from '../data/curriculum';
 import { interviewRecords } from '../data/interviews';
 import { foundationLessons } from '../data/lessons';
+import { mockInterviewTracks } from '../data/mock-interviews';
 import { practiceCategories, practiceQuestions } from '../data/practice';
 import { readLastLearningActivity } from '../lib/learning-activity';
 import { sitePath } from '../lib/site-path';
@@ -112,6 +113,17 @@ export default function Home() {
           detail: `${knowledgeModule.title} · 已完成 ${finishedLessons}/${foundationLessons.length} 节`,
           href: `/lessons/?lesson=${lesson.id}`,
           badge: `${finishedLessons}/${foundationLessons.length}`,
+        };
+      }
+    } else if (lastActivity?.type === 'mock') {
+      const track = mockInterviewTracks.find((item) => item.id === lastActivity.trackId);
+      if (track) {
+        nextResumeCard = {
+          eyebrow: '继续模拟面试',
+          title: track.title,
+          detail: '5 道主问题 · 5 道连续追问 · 本机复盘',
+          href: '/mock/',
+          badge: '5+5',
         };
       }
     }
@@ -289,7 +301,7 @@ export default function Home() {
       <section className="interview-preview-section section">
         <div className="section-head">
           <div><p className="section-kicker">03 / REAL INTERVIEW REPORTS</p><h2>看看国内岗位，真的会怎样连续追问。</h2></div>
-          <div className="resource-head-action"><p>13 份公开流程整理出 52 道可筛选真题，支持 90 秒作答、回答骨架与本地复盘，同时保留原帖和结果边界。</p><a href={sitePath('/interviews/#real-questions')}>开始刷国内面试真题 →</a></div>
+          <div className="resource-head-action"><p>13 份公开流程整理出 52 道可筛选真题，并提供五套 12 分钟整场模拟；答案与复盘只保存在当前设备。</p><a href={sitePath('/mock/')}>开始一场模拟面试 →</a></div>
         </div>
         <div className="interview-preview-grid">
           {interviewRecords.slice(0, 3).map((record, index) => (

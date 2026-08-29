@@ -10,6 +10,7 @@ import { practiceQuestions } from '../../data/practice';
 import { trackEvent } from '../../lib/analytics';
 import { interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
 import { saveLastLearningActivity } from '../../lib/learning-activity';
+import { emptyMockInterviewStorage, mockInterviewStorageKey, type MockInterviewStorage } from '../../lib/mock-interview';
 import { sitePath } from '../../lib/site-path';
 
 const stepDefinitions = [
@@ -36,12 +37,13 @@ type ProgressRecord = Record<string, {
   rubric?: boolean[];
 }>;
 type LearningBackup = {
-  version: 2 | 3;
+  version: 2 | 3 | 4;
   exportedAt: string;
   practiceProgress: ProgressRecord;
   lessonProgress: Record<string, boolean>;
   homeNotes: string;
   interviewPractice?: InterviewPracticeProgress;
+  mockInterview?: MockInterviewStorage;
 };
 
 const storageKey = 'llm-interview-lab-progress-v1';
@@ -331,6 +333,7 @@ export function PracticeWorkspace() {
   const exportProgress = (format: 'json' | 'md') => {
     let lessonProgress: Record<string, boolean> = {};
     let interviewPractice: InterviewPracticeProgress = {};
+    let mockInterview = emptyMockInterviewStorage();
     try {
       lessonProgress = JSON.parse(window.localStorage.getItem(lessonStorageKey) ?? '{}') as Record<string, boolean>;
     } catch {
@@ -341,16 +344,22 @@ export function PracticeWorkspace() {
     } catch {
       interviewPractice = {};
     }
+    try {
+      mockInterview = JSON.parse(window.localStorage.getItem(mockInterviewStorageKey) ?? '{"reports":[]}') as MockInterviewStorage;
+    } catch {
+      mockInterview = emptyMockInterviewStorage();
+    }
     const homeNotes = window.localStorage.getItem(homeNotesKey) ?? '';
 
     if (format === 'json') {
       const backup: LearningBackup = {
-        version: 3,
+        version: 4,
         exportedAt: new Date().toISOString(),
         practiceProgress: progress,
         lessonProgress,
         homeNotes,
         interviewPractice,
+        mockInterview,
       };
       downloadText('llm-interview-lab-progress.json', JSON.stringify(backup, null, 2), 'application/json');
     } else {
@@ -379,14 +388,15 @@ export function PracticeWorkspace() {
     try {
       const parsed = JSON.parse(await file.text());
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
-      if ('version' in parsed && (parsed.version === 2 || parsed.version === 3) && 'practiceProgress' in parsed) {
+      if ('version' in parsed && (parsed.version === 2 || parsed.version === 3 || parsed.version === 4) && 'practiceProgress' in parsed) {
         const backup = parsed as LearningBackup;
         if (!backup.practiceProgress || typeof backup.practiceProgress !== 'object') throw new Error('invalid');
         setProgress(backup.practiceProgress);
         window.localStorage.setItem(lessonStorageKey, JSON.stringify(backup.lessonProgress ?? {}));
         window.localStorage.setItem(homeNotesKey, backup.homeNotes ?? '');
-        if (backup.version === 3) window.localStorage.setItem(interviewPracticeStorageKey, JSON.stringify(backup.interviewPractice ?? {}));
-        setTransferStatus(backup.version === 3 ? '已恢复课程、练习、面经真题和全部 Notes' : '已恢复旧备份；该版本不包含面经真题记录');
+        if (backup.version >= 3) window.localStorage.setItem(interviewPracticeStorageKey, JSON.stringify(backup.interviewPractice ?? {}));
+        if (backup.version === 4) window.localStorage.setItem(mockInterviewStorageKey, JSON.stringify(backup.mockInterview ?? emptyMockInterviewStorage()));
+        setTransferStatus(backup.version === 4 ? '已恢复课程、练习、面经真题、整场模拟和全部 Notes' : backup.version === 3 ? '已恢复旧备份；该版本不包含整场模拟记录' : '已恢复旧备份；该版本不包含面经真题与整场模拟记录');
       } else {
         setProgress(parsed as ProgressRecord);
         setTransferStatus('已恢复旧版模块进度；课程与首页 Notes 不在旧备份中');

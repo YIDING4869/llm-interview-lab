@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { sitePath } from '../lib/site-path';
 
 type SiteHeaderProps = {
-  active?: 'home' | 'learn' | 'lessons' | 'practice' | 'questions' | 'progress' | 'interviews' | 'labs' | 'resources';
+  active?: 'home' | 'learn' | 'lessons' | 'practice' | 'questions' | 'progress' | 'interviews' | 'mock' | 'labs' | 'resources';
 };
 
 export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
@@ -17,6 +17,7 @@ export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
     { id: 'progress', label: '我的进度', href: sitePath('/progress/') },
     { id: 'questions', label: '面试题', href: sitePath('/questions/') },
     { id: 'interviews', label: '国内面经', href: sitePath('/interviews/') },
+    { id: 'mock', label: '模拟面试', href: sitePath('/mock/') },
     { id: 'labs', label: '可视化', href: sitePath('/labs/') },
     { id: 'resources', label: '资源库', href: sitePath('/resources/') },
   ];

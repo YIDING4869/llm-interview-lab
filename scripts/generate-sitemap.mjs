@@ -24,6 +24,7 @@ const routes = [
   { path: '/labs/', frequency: 'monthly', priority: '0.8' },
   { path: '/resources/', frequency: 'monthly', priority: '0.8' },
   { path: '/interviews/', frequency: 'weekly', priority: '0.9' },
+  { path: '/mock/', frequency: 'weekly', priority: '0.9' },
   ...lessonIds.map((id) => ({ path: `/lessons/${id}/`, frequency: 'monthly', priority: '0.8' })),
   ...questionIds.map((id) => ({ path: `/questions/${id}/`, frequency: 'monthly', priority: '0.8' })),
   ...interviewIds.map((id) => ({ path: `/interviews/${id}/`, frequency: 'monthly', priority: '0.7' })),

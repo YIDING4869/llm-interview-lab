@@ -368,7 +368,7 @@ export function InterviewLibrary() {
 
         <div className="interview-results">
           <section className="real-question-index" id="real-questions">
-            <div className="real-question-index-head"><div><span>REAL QUESTION INDEX</span><h2>先刷真题，再回到完整面经理解上下文。</h2></div><div className="real-question-index-actions"><p><strong>{filteredQuestions.length}</strong> 道匹配问题 · 经过摘要与改写</p><button type="button" disabled={matchingQuestions.length === 0} onClick={openNextQuestion}>{nextUnpracticedQuestion ? '练下一道待练题' : '查看一题准备复答'} <span>→</span></button></div></div>
+            <div className="real-question-index-head"><div><span>REAL QUESTION INDEX</span><h2>先刷真题，再回到完整面经理解上下文。</h2></div><div className="real-question-index-actions"><p><strong>{filteredQuestions.length}</strong> 道匹配问题 · 经过摘要与改写</p><a href={sitePath('/mock/')}>进入 12 分钟整场模拟 →</a><button type="button" disabled={matchingQuestions.length === 0} onClick={openNextQuestion}>{nextUnpracticedQuestion ? '练下一道待练题' : '查看一题准备复答'} <span>→</span></button></div></div>
             {visibleQuestions.length > 0 ? <div className="real-question-grid">{visibleQuestions.map(({ record, prompt, promptIndex }, index) => {
               const practiced = (practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) > 0;
               const guide = guideForInterviewQuestion(record.id, promptIndex);

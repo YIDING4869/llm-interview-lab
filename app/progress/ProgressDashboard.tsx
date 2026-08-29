@@ -5,11 +5,13 @@ import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { knowledgeModules } from '../../data/curriculum';
 import { guideForInterviewQuestion } from '../../data/interview-guides';
-import { interviewPromptCount, interviewRecords } from '../../data/interviews';
+import { interviewRecords } from '../../data/interviews';
 import { foundationLessons, lessonsForModule } from '../../data/lessons';
+import { mockInterviewTracks } from '../../data/mock-interviews';
 import { practiceQuestions } from '../../data/practice';
 import { interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
 import { readLastLearningActivity } from '../../lib/learning-activity';
+import { emptyMockInterviewStorage, mockInterviewStorageKey, type MockInterviewStorage } from '../../lib/mock-interview';
 import { sitePath } from '../../lib/site-path';
 
 type QuestionProgress = { attempts?: Array<{ answer?: string; savedAt?: string }> };
@@ -28,6 +30,7 @@ type ProgressSummary = {
   interviewAttempts: number;
   followupAttempts: number;
   interviewQuestions: number;
+  mockInterviews: number;
   nextTitle: string;
   nextDetail: string;
   nextHref: string;
@@ -69,6 +72,7 @@ const emptySummary: ProgressSummary = {
   interviewAttempts: 0,
   followupAttempts: 0,
   interviewQuestions: 0,
+  mockInterviews: 0,
   nextTitle: foundationLessons[0].title,
   nextDetail: '从第一节站内课建立程序、数学与模型直觉。',
   nextHref: `/lessons/?lesson=${foundationLessons[0].id}`,
@@ -93,6 +97,7 @@ export function ProgressDashboard() {
   useEffect(() => {
     const practice = readJson<PracticeProgress>('llm-interview-lab-progress-v1', {});
     const interviewPractice = readJson<InterviewPracticeProgress>(interviewPracticeStorageKey, {});
+    const mockInterview = readJson<MockInterviewStorage>(mockInterviewStorageKey, emptyMockInterviewStorage());
     const lessons = readJson<Record<string, boolean>>('llm-interview-lab-lesson-progress-v1', {});
     const events = readJson<Array<{ event?: string }>>('llm-interview-lab-events-v1', []);
     const lastActivity = readLastLearningActivity();
@@ -196,6 +201,13 @@ export function ProgressDashboard() {
         nextDetail = `继续 ${record.company} 面经题的限时作答、自评与追问准备。`;
         nextHref = `/interviews/?record=${record.id}&prompt=${lastActivity.promptIndex + 1}#question-trainer`;
       }
+    } else if (lastActivity?.type === 'mock') {
+      const track = mockInterviewTracks.find((item) => item.id === lastActivity.trackId);
+      if (track) {
+        nextTitle = track.title;
+        nextDetail = mockInterview.active?.trackId === track.id && mockInterview.active.stage !== 'report' ? '继续未完成的整场模拟与连续追问。' : '重新开始一场 5 道主问题与连续追问。';
+        nextHref = '/mock/';
+      }
     }
 
     queueMicrotask(() => {
@@ -208,6 +220,7 @@ export function ProgressDashboard() {
         interviewAttempts,
         followupAttempts,
         interviewQuestions,
+        mockInterviews: mockInterview.reports.length,
         nextTitle,
         nextDetail,
         nextHref,
@@ -234,7 +247,7 @@ export function ProgressDashboard() {
         <div><span>课程完成</span><strong>{summary.lessonsDone}<b> / {foundationLessons.length}</b></strong><p>通过检查题或手动标记的站内课程</p></div>
         <div><span>学习动作</span><strong>{summary.learningActions}<b> / {knowledgeModules.length * 4}</b></strong><p>理解、作答、动手与复盘</p></div>
         <div><span>闭环模块</span><strong>{summary.modulesComplete}<b> / {knowledgeModules.length}</b></strong><p>四个学习动作全部完成的模块</p></div>
-        <div><span>保存作答</span><strong>{summary.savedAttempts}<b> 次</b></strong><p>结构题 {summary.structuredAttempts} · 面经主答 {summary.interviewAttempts} · 连续追问 {summary.followupAttempts}（{summary.interviewQuestions}/{interviewPromptCount} 题）</p></div>
+        <div><span>保存作答</span><strong>{summary.savedAttempts}<b> 次</b></strong><p>结构题 {summary.structuredAttempts} · 面经主答 {summary.interviewAttempts} · 连续追问 {summary.followupAttempts} · 整场模拟 {summary.mockInterviews}</p></div>
       </section>
 
       <section className="progress-detail-section">
