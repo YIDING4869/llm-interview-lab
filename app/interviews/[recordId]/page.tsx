@@ -49,7 +49,7 @@ export default async function InterviewPage({ params }: InterviewPageProps) {
 
         <section className="interview-detail-themes"><div><span>QUESTION MAP</span><h2>这场面试在连续追问什么？</h2></div><ul>{record.themes.map((theme, index) => <li key={theme}><span>{String(index + 1).padStart(2, '0')}</span><strong>{theme}</strong></li>)}</ul></section>
 
-        <section className="interview-detail-prompts"><div><span>REPHRASED PROMPTS</span><h2>先自己回答，再回到原帖补上下文。</h2></div><ol>{record.prompts.map((prompt, index) => <li key={prompt}><span>Q{String(index + 1).padStart(2, '0')}</span><p>{prompt}</p></li>)}</ol></section>
+        <section className="interview-detail-prompts"><div><span>REPHRASED PROMPTS</span><h2>先自己回答，再回到原帖补上下文。</h2></div><ol>{record.prompts.map((prompt, index) => <li key={prompt}><span>Q{String(index + 1).padStart(2, '0')}</span><p>{prompt}</p><a href={sitePath(`/interviews/?record=${record.id}&prompt=${index + 1}#question-trainer`)}>进入 90 秒训练 →</a></li>)}</ol></section>
 
         <section className="interview-detail-prepare"><span>PREPARATION SIGNAL</span><blockquote>{record.preparation}</blockquote><div><a href={record.sourceHref} target="_blank" rel="noreferrer">核对原始面经 <span>↗</span></a>{record.labHref && <a href={sitePath(record.labHref)}>打开关联实验 <span>→</span></a>}<a href={sitePath('/interviews/')}>返回完整面经库 <span>→</span></a></div></section>
 

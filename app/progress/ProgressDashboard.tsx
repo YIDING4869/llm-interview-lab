@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { knowledgeModules } from '../../data/curriculum';
+import { interviewPromptCount, interviewRecords } from '../../data/interviews';
 import { foundationLessons, lessonsForModule } from '../../data/lessons';
 import { practiceQuestions } from '../../data/practice';
+import { interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
 import { readLastLearningActivity } from '../../lib/learning-activity';
 import { sitePath } from '../../lib/site-path';
 
@@ -21,6 +23,9 @@ type ProgressSummary = {
   learningActions: number;
   modulesComplete: number;
   savedAttempts: number;
+  structuredAttempts: number;
+  interviewAttempts: number;
+  interviewQuestions: number;
   nextTitle: string;
   nextDetail: string;
   nextHref: string;
@@ -39,11 +44,11 @@ type ModuleProgressRow = {
 };
 
 type RecentAttempt = {
-  questionId: number;
-  moduleId: string;
+  id: string;
   title: string;
-  moduleTitle: string;
+  context: string;
   savedAt: string;
+  href: string;
 };
 
 const eventDefinitions = [
@@ -58,6 +63,9 @@ const emptySummary: ProgressSummary = {
   learningActions: 0,
   modulesComplete: 0,
   savedAttempts: 0,
+  structuredAttempts: 0,
+  interviewAttempts: 0,
+  interviewQuestions: 0,
   nextTitle: foundationLessons[0].title,
   nextDetail: '从第一节站内课建立程序、数学与模型直觉。',
   nextHref: `/lessons/?lesson=${foundationLessons[0].id}`,
@@ -81,16 +89,19 @@ export function ProgressDashboard() {
 
   useEffect(() => {
     const practice = readJson<PracticeProgress>('llm-interview-lab-progress-v1', {});
+    const interviewPractice = readJson<InterviewPracticeProgress>(interviewPracticeStorageKey, {});
     const lessons = readJson<Record<string, boolean>>('llm-interview-lab-lesson-progress-v1', {});
     const events = readJson<Array<{ event?: string }>>('llm-interview-lab-events-v1', []);
     const lastActivity = readLastLearningActivity();
     const learningActions = knowledgeModules.reduce((total, module) => total + Object.values(practice[module.id]?.steps ?? {}).filter(Boolean).length, 0);
     const modulesComplete = knowledgeModules.filter((module) => ['understand', 'answer', 'build', 'reflect'].every((step) => practice[module.id]?.steps?.[step])).length;
-    const savedAttempts = knowledgeModules.reduce((total, module) => {
+    const structuredAttempts = knowledgeModules.reduce((total, module) => {
       const item = practice[module.id];
       const questionAttempts = Object.values(item?.questions ?? {}).reduce((count, question) => count + (question.attempts?.length ?? 0), 0);
       return total + (questionAttempts || item?.attempts?.length || 0);
     }, 0);
+    const interviewAttempts = Object.values(interviewPractice).reduce((total, item) => total + (item.attempts?.length ?? 0), 0);
+    const interviewQuestions = Object.values(interviewPractice).filter((item) => (item.attempts?.length ?? 0) > 0).length;
 
     const nextModuleRows = knowledgeModules.map((module) => {
       const item = practice[module.id];
@@ -120,16 +131,24 @@ export function ProgressDashboard() {
         for (const attempt of questionProgress.attempts ?? []) {
           if (!attempt.savedAt) continue;
           hasQuestionAttempts = true;
-          nextRecentAttempts.push({ questionId: question.id, moduleId: knowledgeModule.id, title: question.title, moduleTitle: knowledgeModule.title, savedAt: attempt.savedAt });
+          nextRecentAttempts.push({ id: `practice-${question.id}-${attempt.savedAt}`, title: question.title, context: knowledgeModule.title, savedAt: attempt.savedAt, href: `/practice/?module=${knowledgeModule.id}&question=${question.id}#answer` });
         }
       }
       if (!hasQuestionAttempts) {
         const firstQuestion = practiceQuestions.find((question) => question.moduleId === knowledgeModule.id);
         if (!firstQuestion) continue;
         for (const attempt of item?.attempts ?? []) {
-          if (attempt.savedAt) nextRecentAttempts.push({ questionId: firstQuestion.id, moduleId: knowledgeModule.id, title: firstQuestion.title, moduleTitle: knowledgeModule.title, savedAt: attempt.savedAt });
+          if (attempt.savedAt) nextRecentAttempts.push({ id: `practice-${firstQuestion.id}-${attempt.savedAt}`, title: firstQuestion.title, context: knowledgeModule.title, savedAt: attempt.savedAt, href: `/practice/?module=${knowledgeModule.id}&question=${firstQuestion.id}#answer` });
         }
       }
+    }
+    for (const record of interviewRecords) {
+      record.prompts.forEach((prompt, promptIndex) => {
+        const item = interviewPractice[interviewQuestionKey(record.id, promptIndex)];
+        for (const attempt of item?.attempts ?? []) {
+          nextRecentAttempts.push({ id: `interview-${record.id}-${promptIndex}-${attempt.savedAt}`, title: prompt, context: `${record.company} · 真实面经`, savedAt: attempt.savedAt, href: `/interviews/?record=${record.id}&prompt=${promptIndex + 1}#question-trainer` });
+        }
+      });
     }
     nextRecentAttempts.sort((a, b) => Date.parse(b.savedAt) - Date.parse(a.savedAt));
 
@@ -157,6 +176,14 @@ export function ProgressDashboard() {
         nextDetail = `继续 ${knowledgeModule.title} 的站内课程与检查题。`;
         nextHref = `/lessons/?lesson=${lesson.id}`;
       }
+    } else if (lastActivity?.type === 'interview') {
+      const record = interviewRecords.find((item) => item.id === lastActivity.recordId);
+      const prompt = record?.prompts[lastActivity.promptIndex];
+      if (record && prompt) {
+        nextTitle = prompt;
+        nextDetail = `继续 ${record.company} 面经题的限时作答、自评与追问准备。`;
+        nextHref = `/interviews/?record=${record.id}&prompt=${lastActivity.promptIndex + 1}#question-trainer`;
+      }
     }
 
     queueMicrotask(() => {
@@ -164,7 +191,10 @@ export function ProgressDashboard() {
         lessonsDone: Object.values(lessons).filter(Boolean).length,
         learningActions,
         modulesComplete,
-        savedAttempts,
+        savedAttempts: structuredAttempts + interviewAttempts,
+        structuredAttempts,
+        interviewAttempts,
+        interviewQuestions,
         nextTitle,
         nextDetail,
         nextHref,
@@ -191,7 +221,7 @@ export function ProgressDashboard() {
         <div><span>课程完成</span><strong>{summary.lessonsDone}<b> / {foundationLessons.length}</b></strong><p>通过检查题或手动标记的站内课程</p></div>
         <div><span>学习动作</span><strong>{summary.learningActions}<b> / {knowledgeModules.length * 4}</b></strong><p>理解、作答、动手与复盘</p></div>
         <div><span>闭环模块</span><strong>{summary.modulesComplete}<b> / {knowledgeModules.length}</b></strong><p>四个学习动作全部完成的模块</p></div>
-        <div><span>保存作答</span><strong>{summary.savedAttempts}<b> 次</b></strong><p>当前设备保留的历史答案版本</p></div>
+        <div><span>保存作答</span><strong>{summary.savedAttempts}<b> 次</b></strong><p>结构题 {summary.structuredAttempts} 次 · 面经真题 {summary.interviewAttempts} 次（{summary.interviewQuestions}/{interviewPromptCount} 题）</p></div>
       </section>
 
       <section className="progress-detail-section">
@@ -213,7 +243,7 @@ export function ProgressDashboard() {
           <aside className="progress-activity-column">
             <section className="progress-recent-panel">
               <div><span>RECENT ANSWERS</span><strong>最近保存的作答</strong></div>
-              {recentAttempts.length > 0 ? <ol>{recentAttempts.map((attempt, index) => <li key={`${attempt.questionId}-${attempt.savedAt}`}><span>{String(index + 1).padStart(2, '0')}</span><div><small>{attempt.moduleTitle} · {new Date(attempt.savedAt).toLocaleDateString('zh-CN')}</small><a href={sitePath(`/practice/?module=${attempt.moduleId}&question=${attempt.questionId}#answer`)}>{attempt.title}</a></div></li>)}</ol> : <div className="progress-no-attempts"><strong>还没有保存作答</strong><p>选择一道题，先留下第一版答案，下一次才能比较进步。</p><a href={sitePath('/questions/')}>去题库选择第一题 →</a></div>}
+              {recentAttempts.length > 0 ? <ol>{recentAttempts.map((attempt, index) => <li key={attempt.id}><span>{String(index + 1).padStart(2, '0')}</span><div><small>{attempt.context} · {new Date(attempt.savedAt).toLocaleDateString('zh-CN')}</small><a href={sitePath(attempt.href)}>{attempt.title}</a></div></li>)}</ol> : <div className="progress-no-attempts"><strong>还没有保存作答</strong><p>选择一道结构题或面经真题，先留下第一版答案，下一次才能比较进步。</p><a href={sitePath('/interviews/#real-questions')}>去面经真题开始第一题 →</a></div>}
             </section>
 
             <section className="progress-event-panel">

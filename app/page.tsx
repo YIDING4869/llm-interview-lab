@@ -289,7 +289,7 @@ export default function Home() {
       <section className="interview-preview-section section">
         <div className="section-head">
           <div><p className="section-kicker">03 / REAL INTERVIEW REPORTS</p><h2>看看国内岗位，真的会怎样连续追问。</h2></div>
-          <div className="resource-head-action"><p>13 份公开流程整理出 52 道可筛选真题，并保留原帖、日期和结果边界。它们用于识别能力结构，不是公司官方题库。</p><a href={sitePath('/interviews/#real-questions')}>开始刷国内面试真题 →</a></div>
+          <div className="resource-head-action"><p>13 份公开流程整理出 52 道可筛选真题，支持 90 秒作答、回答骨架与本地复盘，同时保留原帖和结果边界。</p><a href={sitePath('/interviews/#real-questions')}>开始刷国内面试真题 →</a></div>
         </div>
         <div className="interview-preview-grid">
           {interviewRecords.slice(0, 3).map((record, index) => (

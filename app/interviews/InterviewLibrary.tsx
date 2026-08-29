@@ -1,15 +1,68 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { interviewFocuses, interviewPromptCount, interviewRecords, type InterviewFocus } from '../../data/interviews';
+import { trackEvent } from '../../lib/analytics';
+import { answerFramesFor, interviewAnswerRubric, interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
+import { saveLastLearningActivity } from '../../lib/learning-activity';
 import { sitePath } from '../../lib/site-path';
+
+const interviewQuestions = interviewRecords.flatMap((record) => record.prompts.map((prompt, promptIndex) => ({ record, prompt, promptIndex })));
+
+function formatCountdown(total: number) {
+  return `${Math.floor(total / 60).toString().padStart(2, '0')}:${(total % 60).toString().padStart(2, '0')}`;
+}
 
 export function InterviewLibrary() {
   const [focus, setFocus] = useState<'全部' | InterviewFocus>('全部');
   const [query, setQuery] = useState('');
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [practiceProgress, setPracticeProgress] = useState<InterviewPracticeProgress>({});
+  const [activeQuestionKey, setActiveQuestionKey] = useState('');
+  const [secondsLeft, setSecondsLeft] = useState(90);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [practiceStatus, setPracticeStatus] = useState('草稿自动保存在当前设备');
+  const [hydrated, setHydrated] = useState(false);
+  const trainerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem(interviewPracticeStorageKey);
+    const params = new URLSearchParams(window.location.search);
+    const recordId = params.get('record');
+    const promptIndex = Number(params.get('prompt')) - 1;
+    const requestedQuestion = interviewQuestions.find((item) => item.record.id === recordId && item.promptIndex === promptIndex);
+    queueMicrotask(() => {
+      if (saved) {
+        try {
+          setPracticeProgress(JSON.parse(saved) as InterviewPracticeProgress);
+        } catch {
+          window.localStorage.removeItem(interviewPracticeStorageKey);
+        }
+      }
+      if (requestedQuestion) setActiveQuestionKey(interviewQuestionKey(requestedQuestion.record.id, requestedQuestion.promptIndex));
+      setHydrated(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) window.localStorage.setItem(interviewPracticeStorageKey, JSON.stringify(practiceProgress));
+  }, [hydrated, practiceProgress]);
+
+  useEffect(() => {
+    if (!timerRunning) return;
+    const timer = window.setInterval(() => {
+      setSecondsLeft((current) => {
+        if (current <= 1) {
+          setTimerRunning(false);
+          return 0;
+        }
+        return current - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [timerRunning]);
 
   const filteredRecords = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -22,7 +75,7 @@ export function InterviewLibrary() {
 
   const filteredQuestions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return interviewRecords.flatMap((record) => record.prompts.map((prompt, promptIndex) => ({ record, prompt, promptIndex }))).filter(({ record, prompt }) => {
+    return interviewQuestions.filter(({ record, prompt }) => {
       const matchesFocus = focus === '全部' || record.focuses.includes(focus);
       const text = `${record.company} ${record.role} ${record.themes.join(' ')} ${prompt}`.toLowerCase();
       return matchesFocus && (!normalized || text.includes(normalized));
@@ -30,6 +83,77 @@ export function InterviewLibrary() {
   }, [focus, query]);
 
   const visibleQuestions = showAllQuestions ? filteredQuestions : filteredQuestions.slice(0, 12);
+  const activeQuestion = interviewQuestions.find((item) => interviewQuestionKey(item.record.id, item.promptIndex) === activeQuestionKey);
+  const activeProgress = activeQuestionKey ? practiceProgress[activeQuestionKey] ?? {} : {};
+  const practicedQuestionCount = Object.values(practiceProgress).filter((item) => (item.attempts?.length ?? 0) > 0).length;
+  const savedAttemptCount = Object.values(practiceProgress).reduce((total, item) => total + (item.attempts?.length ?? 0), 0);
+
+  const startQuestion = (recordId: string, promptIndex: number) => {
+    const key = interviewQuestionKey(recordId, promptIndex);
+    const question = interviewQuestions.find((item) => interviewQuestionKey(item.record.id, item.promptIndex) === key);
+    if (!question) return;
+    setActiveQuestionKey(key);
+    setSecondsLeft(90);
+    setTimerRunning(true);
+    setPracticeStatus('90 秒计时已开始，先完成第一版');
+    saveLastLearningActivity({ type: 'interview', recordId, promptIndex });
+    trackEvent('practice_start', { surface: 'interview', record_id: recordId, prompt_index: promptIndex + 1 });
+    const url = new URL(window.location.href);
+    url.searchParams.set('record', recordId);
+    url.searchParams.set('prompt', String(promptIndex + 1));
+    url.hash = 'question-trainer';
+    window.history.replaceState({}, '', url);
+    queueMicrotask(() => trainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
+  const setDraft = (draft: string) => {
+    if (!activeQuestionKey) return;
+    setPracticeProgress((current) => ({ ...current, [activeQuestionKey]: { ...current[activeQuestionKey], draft } }));
+  };
+
+  const toggleRubric = (index: number) => {
+    if (!activeQuestionKey) return;
+    setPracticeProgress((current) => {
+      const rubric = [...(current[activeQuestionKey]?.rubric ?? [])];
+      rubric[index] = !rubric[index];
+      const attempts = current[activeQuestionKey]?.attempts ?? [];
+      const nextAttempts = attempts.length > 0 ? [...attempts.slice(0, -1), { ...attempts.at(-1)!, rubric }] : attempts;
+      return { ...current, [activeQuestionKey]: { ...current[activeQuestionKey], rubric, attempts: nextAttempts } };
+    });
+  };
+
+  const toggleTimer = () => {
+    if (secondsLeft === 0) {
+      setSecondsLeft(90);
+      setTimerRunning(true);
+      return;
+    }
+    setTimerRunning((running) => !running);
+  };
+
+  const saveAttempt = () => {
+    if (!activeQuestion || !activeQuestionKey) return;
+    const answer = activeProgress.draft?.trim();
+    if (!answer) return;
+    const attempt = { answer, savedAt: new Date().toISOString(), rubric: activeProgress.rubric ?? [] };
+    setPracticeProgress((current) => ({
+      ...current,
+      [activeQuestionKey]: {
+        ...current[activeQuestionKey],
+        attempts: [...(current[activeQuestionKey]?.attempts ?? []), attempt].slice(-8),
+      },
+    }));
+    setTimerRunning(false);
+    setPracticeStatus(`已保存第 ${(activeProgress.attempts?.length ?? 0) + 1} 次作答；现在对照骨架补漏`);
+    saveLastLearningActivity({ type: 'interview', recordId: activeQuestion.record.id, promptIndex: activeQuestion.promptIndex });
+    trackEvent('practice_complete', {
+      surface: 'interview',
+      record_id: activeQuestion.record.id,
+      prompt_index: activeQuestion.promptIndex + 1,
+      answer_length: answer.length,
+      attempt_number: (activeProgress.attempts?.length ?? 0) + 1,
+    });
+  };
 
   return (
     <main className="interviews-page">
@@ -41,7 +165,7 @@ export function InterviewLibrary() {
           <div><p className="eyebrow"><span /> PUBLIC REPORTS / TRACEABLE SOURCES</p><h1>看真实追问怎样发生，<br /><em>不要把面经背成题库。</em></h1></div>
           <div className="interview-source-contract">
             <p>首批内容来自候选人公开复盘。页面保留发布日期、轮次、作者自述结果和原始链接；问题经过摘要与改写，不代表公司官方固定题目。</p>
-            <dl><div><dt>{interviewRecords.length}</dt><dd>公开流程</dd></div><div><dt>{interviewPromptCount}</dt><dd>改写真题</dd></div><div><dt>可追溯</dt><dd>原帖来源</dd></div></dl>
+            <dl><div><dt>{interviewRecords.length}</dt><dd>公开流程</dd></div><div><dt>{interviewPromptCount}</dt><dd>改写真题</dd></div><div><dt>{practicedQuestionCount}</dt><dd>本机已练</dd></div></dl>
           </div>
         </div>
       </section>
@@ -67,10 +191,36 @@ export function InterviewLibrary() {
                 <div><span>Q{String(index + 1).padStart(2, '0')}</span><span>{record.company}</span><span>{record.published}</span></div>
                 <small>{record.role} · {record.focuses.join(' / ')}</small>
                 <h3>{prompt}</h3>
-                <div><a href={sitePath(`/interviews/${record.id}/`)}>查看面经上下文 →</a><a href={record.sourceHref} target="_blank" rel="noreferrer">原帖 ↗</a></div>
+                <div><button type="button" onClick={() => startQuestion(record.id, promptIndex)}>90 秒作答 →</button><a href={sitePath(`/interviews/${record.id}/`)}>上下文</a><a href={record.sourceHref} target="_blank" rel="noreferrer">原帖 ↗</a></div>
               </article>
             ))}</div> : <div className="interview-empty"><strong>没有匹配的真题</strong><p>减少筛选条件，或搜索 RAG、Agent、量化、多模态等主题。</p></div>}
             {filteredQuestions.length > 12 && <button className="real-question-more" type="button" onClick={() => setShowAllQuestions((visible) => !visible)}>{showAllQuestions ? '收起真题' : `展开全部 ${filteredQuestions.length} 道真题`} <span>{showAllQuestions ? '↑' : '↓'}</span></button>}
+
+            <section className={`interview-practice-workspace${activeQuestion ? ' active' : ''}`} id="question-trainer" ref={trainerRef}>
+              {activeQuestion ? <>
+                <header>
+                  <div><span>90-SECOND INTERVIEW PRACTICE</span><small>{activeQuestion.record.company} · {activeQuestion.record.role}</small></div>
+                  <strong>{practicedQuestionCount} / {interviewPromptCount} 已练 · {savedAttemptCount} 次作答</strong>
+                  <h2>{activeQuestion.prompt}</h2>
+                </header>
+                <div className="interview-practice-grid">
+                  <div>
+                    <div className="answer-recorder interview-answer-recorder">
+                      <div className="answer-recorder-head"><span>YOUR ANSWER · 只保存在当前设备</span><strong>{formatCountdown(secondsLeft)}</strong></div>
+                      <textarea value={activeProgress.draft ?? ''} onChange={(event) => setDraft(event.target.value)} placeholder={'先直接回答，再补：\n1. 输入与关键机制\n2. 收益、代价和适用条件\n3. 指标、项目证据或失败边界'} />
+                      <div className="answer-recorder-actions"><button type="button" onClick={toggleTimer}>{secondsLeft === 0 ? '重新计时' : timerRunning ? '暂停' : '继续计时'}</button><button className="save-attempt" type="button" disabled={!activeProgress.draft?.trim()} onClick={saveAttempt}>保存本次作答</button><span aria-live="polite">{practiceStatus}</span></div>
+                    </div>
+                    {(activeProgress.attempts?.length ?? 0) > 0 && <details className="attempt-history"><summary>查看历史作答 · {activeProgress.attempts?.length} 次 <span>＋</span></summary><ol>{[...(activeProgress.attempts ?? [])].reverse().map((attempt, index) => <li key={`${attempt.savedAt}-${index}`}><span>{new Date(attempt.savedAt).toLocaleString('zh-CN')} · 自评 {attempt.rubric.filter(Boolean).length}/4</span><p>{attempt.answer}</p></li>)}</ol></details>}
+                  </div>
+                  <aside className="interview-answer-coach">
+                    <div><span>30 秒回答骨架</span>{answerFramesFor(activeQuestion.record).map((item) => <p key={item.focus}><b>{item.focus}</b>{item.frame}</p>)}</div>
+                    <div><span>完成后自评</span><ul className="answer-rubric">{interviewAnswerRubric.map((item, index) => <li key={item.title}><button type="button" className={activeProgress.rubric?.[index] ? 'checked' : ''} aria-pressed={Boolean(activeProgress.rubric?.[index])} onClick={() => toggleRubric(index)}><span>{activeProgress.rubric?.[index] ? '✓' : String(index + 1).padStart(2, '0')}</span><div><strong>{item.title}</strong><small>{item.detail}</small></div></button></li>)}</ul></div>
+                    <div className="interview-followup-coach"><span>下一轮可能怎样追问</span><p>{activeQuestion.record.preparation}</p></div>
+                  </aside>
+                </div>
+                <footer><a href={sitePath(`/interviews/${activeQuestion.record.id}/`)}>查看完整面经上下文 →</a><a href={sitePath(activeQuestion.record.practiceHref)}>补对应知识与结构题 →</a>{activeQuestion.record.labHref && <a href={sitePath(activeQuestion.record.labHref)}>打开关联实验 →</a>}</footer>
+              </> : <div className="interview-practice-empty"><span>INTERVIEW PRACTICE</span><h2>从上面的任意真题开始，留下第一版答案。</h2><p>系统提供 90 秒计时、回答骨架和四项自评；草稿、历史版本和完成进度只保存在当前设备。</p></div>}
+            </section>
           </section>
 
           <div className="interview-results-head"><span>{filteredRecords.length.toString().padStart(2, '0')} REPORTS</span><span>公开个人复盘 · 非官方题库</span></div>

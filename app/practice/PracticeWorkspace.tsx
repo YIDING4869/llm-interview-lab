@@ -4,9 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { entryRoutes, knowledgeModules, learningResources } from '../../data/curriculum';
+import { interviewRecords } from '../../data/interviews';
 import { lessonsForModule } from '../../data/lessons';
 import { practiceQuestions } from '../../data/practice';
 import { trackEvent } from '../../lib/analytics';
+import { interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
 import { saveLastLearningActivity } from '../../lib/learning-activity';
 import { sitePath } from '../../lib/site-path';
 
@@ -34,11 +36,12 @@ type ProgressRecord = Record<string, {
   rubric?: boolean[];
 }>;
 type LearningBackup = {
-  version: 2;
+  version: 2 | 3;
   exportedAt: string;
   practiceProgress: ProgressRecord;
   lessonProgress: Record<string, boolean>;
   homeNotes: string;
+  interviewPractice?: InterviewPracticeProgress;
 };
 
 const storageKey = 'llm-interview-lab-progress-v1';
@@ -327,20 +330,27 @@ export function PracticeWorkspace() {
 
   const exportProgress = (format: 'json' | 'md') => {
     let lessonProgress: Record<string, boolean> = {};
+    let interviewPractice: InterviewPracticeProgress = {};
     try {
       lessonProgress = JSON.parse(window.localStorage.getItem(lessonStorageKey) ?? '{}') as Record<string, boolean>;
     } catch {
       lessonProgress = {};
     }
+    try {
+      interviewPractice = JSON.parse(window.localStorage.getItem(interviewPracticeStorageKey) ?? '{}') as InterviewPracticeProgress;
+    } catch {
+      interviewPractice = {};
+    }
     const homeNotes = window.localStorage.getItem(homeNotesKey) ?? '';
 
     if (format === 'json') {
       const backup: LearningBackup = {
-        version: 2,
+        version: 3,
         exportedAt: new Date().toISOString(),
         practiceProgress: progress,
         lessonProgress,
         homeNotes,
+        interviewPractice,
       };
       downloadText('llm-interview-lab-progress.json', JSON.stringify(backup, null, 2), 'application/json');
     } else {
@@ -354,8 +364,12 @@ export function PracticeWorkspace() {
         }).join('\n\n');
         return `## ${module.order} ${module.title}\n\n- 已完成：${completed}\n\n### 最近作答\n\n${questionNotes}\n\n### 复盘\n\n${item?.note || '暂无'}`;
       }).join('\n\n---\n\n');
+      const interviewMarkdown = interviewRecords.flatMap((record) => record.prompts.map((prompt, promptIndex) => {
+        const attempt = interviewPractice[interviewQuestionKey(record.id, promptIndex)]?.attempts?.at(-1);
+        return attempt ? `### ${record.company} · ${prompt}\n\n${attempt.answer}\n\n- 自评：${attempt.rubric.filter(Boolean).length}/4` : null;
+      })).filter(Boolean).join('\n\n');
       const finishedLessons = Object.values(lessonProgress).filter(Boolean).length;
-      downloadText('llm-interview-lab-notes.md', `# LLM Interview Lab 学习记录\n\n- 已完成站内课：${finishedLessons}\n\n## 首页随手记\n\n${homeNotes || '暂无'}\n\n---\n\n${markdown}\n`, 'text/markdown');
+      downloadText('llm-interview-lab-notes.md', `# LLM Interview Lab 学习记录\n\n- 已完成站内课：${finishedLessons}\n\n## 首页随手记\n\n${homeNotes || '暂无'}\n\n---\n\n${markdown}\n\n---\n\n## 国内面经真题作答\n\n${interviewMarkdown || '暂无作答'}\n`, 'text/markdown');
     }
     setTransferStatus(`已导出 ${format === 'json' ? '完整可恢复备份' : '完整 Markdown 笔记'}`);
   };
@@ -365,13 +379,14 @@ export function PracticeWorkspace() {
     try {
       const parsed = JSON.parse(await file.text());
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
-      if ('version' in parsed && parsed.version === 2 && 'practiceProgress' in parsed) {
+      if ('version' in parsed && (parsed.version === 2 || parsed.version === 3) && 'practiceProgress' in parsed) {
         const backup = parsed as LearningBackup;
         if (!backup.practiceProgress || typeof backup.practiceProgress !== 'object') throw new Error('invalid');
         setProgress(backup.practiceProgress);
         window.localStorage.setItem(lessonStorageKey, JSON.stringify(backup.lessonProgress ?? {}));
         window.localStorage.setItem(homeNotesKey, backup.homeNotes ?? '');
-        setTransferStatus('已恢复课程、练习进度和全部 Notes');
+        if (backup.version === 3) window.localStorage.setItem(interviewPracticeStorageKey, JSON.stringify(backup.interviewPractice ?? {}));
+        setTransferStatus(backup.version === 3 ? '已恢复课程、练习、面经真题和全部 Notes' : '已恢复旧备份；该版本不包含面经真题记录');
       } else {
         setProgress(parsed as ProgressRecord);
         setTransferStatus('已恢复旧版模块进度；课程与首页 Notes 不在旧备份中');
