@@ -5,11 +5,12 @@ import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { interviewFocuses, interviewPromptCount, interviewRecords, type InterviewFocus } from '../../data/interviews';
 import { trackEvent } from '../../lib/analytics';
-import { answerFramesFor, interviewAnswerRubric, interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
+import { answerFrameForQuestion, interviewAnswerRubric, interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
 import { saveLastLearningActivity } from '../../lib/learning-activity';
 import { sitePath } from '../../lib/site-path';
 
 const interviewQuestions = interviewRecords.flatMap((record) => record.prompts.map((prompt, promptIndex) => ({ record, prompt, promptIndex })));
+const practiceFilters = ['全部', '待练', '已练'] as const;
 
 function formatCountdown(total: number) {
   return `${Math.floor(total / 60).toString().padStart(2, '0')}:${(total % 60).toString().padStart(2, '0')}`;
@@ -19,6 +20,7 @@ export function InterviewLibrary() {
   const [focus, setFocus] = useState<'全部' | InterviewFocus>('全部');
   const [query, setQuery] = useState('');
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [practiceFilter, setPracticeFilter] = useState<(typeof practiceFilters)[number]>('全部');
   const [practiceProgress, setPracticeProgress] = useState<InterviewPracticeProgress>({});
   const [activeQuestionKey, setActiveQuestionKey] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(90);
@@ -73,7 +75,7 @@ export function InterviewLibrary() {
     });
   }, [focus, query]);
 
-  const filteredQuestions = useMemo(() => {
+  const matchingQuestions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return interviewQuestions.filter(({ record, prompt }) => {
       const matchesFocus = focus === '全部' || record.focuses.includes(focus);
@@ -82,28 +84,62 @@ export function InterviewLibrary() {
     });
   }, [focus, query]);
 
+  const filteredQuestions = useMemo(() => matchingQuestions.filter(({ record, promptIndex }) => {
+    const practiced = (practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) > 0;
+    return practiceFilter === '全部' || (practiceFilter === '已练' ? practiced : !practiced);
+  }), [matchingQuestions, practiceFilter, practiceProgress]);
+
   const visibleQuestions = showAllQuestions ? filteredQuestions : filteredQuestions.slice(0, 12);
   const activeQuestion = interviewQuestions.find((item) => interviewQuestionKey(item.record.id, item.promptIndex) === activeQuestionKey);
   const activeProgress = activeQuestionKey ? practiceProgress[activeQuestionKey] ?? {} : {};
   const practicedQuestionCount = Object.values(practiceProgress).filter((item) => (item.attempts?.length ?? 0) > 0).length;
   const savedAttemptCount = Object.values(practiceProgress).reduce((total, item) => total + (item.attempts?.length ?? 0), 0);
+  const matchingPracticedCount = matchingQuestions.filter(({ record, promptIndex }) => (practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) > 0).length;
+  const nextUnpracticedQuestion = matchingQuestions.find(({ record, promptIndex }) => (practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) === 0);
+  const activeAnswerFrame = activeQuestion ? answerFrameForQuestion(activeQuestion.record, activeQuestion.prompt) : null;
+  const activeAttempts = activeProgress.attempts ?? [];
+  const previousAttempt = activeAttempts.at(-2);
+  const latestAttempt = activeAttempts.at(-1);
+  const previousScore = previousAttempt?.rubric.filter(Boolean).length ?? 0;
+  const latestScore = latestAttempt?.rubric.filter(Boolean).length ?? 0;
 
   const startQuestion = (recordId: string, promptIndex: number) => {
     const key = interviewQuestionKey(recordId, promptIndex);
     const question = interviewQuestions.find((item) => interviewQuestionKey(item.record.id, item.promptIndex) === key);
     if (!question) return;
+    const questionProgress = practiceProgress[key];
+    const hasSavedAttempt = (questionProgress?.attempts?.length ?? 0) > 0;
+    const hasDraft = Boolean(questionProgress?.draft?.trim());
     setActiveQuestionKey(key);
     setSecondsLeft(90);
-    setTimerRunning(true);
-    setPracticeStatus('90 秒计时已开始，先完成第一版');
+    setTimerRunning(!hasSavedAttempt && !hasDraft);
+    setPracticeStatus(hasSavedAttempt ? '已载入历史答案；清空草稿后再开始独立复答' : hasDraft ? '已载入未完成草稿，可继续计时' : '90 秒计时已开始，先完成第一版');
     saveLastLearningActivity({ type: 'interview', recordId, promptIndex });
-    trackEvent('practice_start', { surface: 'interview', record_id: recordId, prompt_index: promptIndex + 1 });
+    if (!hasSavedAttempt && !hasDraft) trackEvent('practice_start', { surface: 'interview', record_id: recordId, prompt_index: promptIndex + 1 });
     const url = new URL(window.location.href);
     url.searchParams.set('record', recordId);
     url.searchParams.set('prompt', String(promptIndex + 1));
     url.hash = 'question-trainer';
     window.history.replaceState({}, '', url);
     queueMicrotask(() => trainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
+  const beginFreshAttempt = () => {
+    if (!activeQuestion || !activeQuestionKey) return;
+    setPracticeProgress((current) => ({
+      ...current,
+      [activeQuestionKey]: { ...current[activeQuestionKey], draft: '', rubric: [] },
+    }));
+    setSecondsLeft(90);
+    setTimerRunning(true);
+    setPracticeStatus('新一轮已开始：旧答案保留在历史中，当前草稿已清空');
+    saveLastLearningActivity({ type: 'interview', recordId: activeQuestion.record.id, promptIndex: activeQuestion.promptIndex });
+    trackEvent('practice_start', { surface: 'interview', record_id: activeQuestion.record.id, prompt_index: activeQuestion.promptIndex + 1, repeat: activeAttempts.length > 0 });
+  };
+
+  const openNextQuestion = () => {
+    const nextQuestion = nextUnpracticedQuestion ?? matchingQuestions[0];
+    if (nextQuestion) startQuestion(nextQuestion.record.id, nextQuestion.promptIndex);
   };
 
   const setDraft = (draft: string) => {
@@ -117,7 +153,9 @@ export function InterviewLibrary() {
       const rubric = [...(current[activeQuestionKey]?.rubric ?? [])];
       rubric[index] = !rubric[index];
       const attempts = current[activeQuestionKey]?.attempts ?? [];
-      const nextAttempts = attempts.length > 0 ? [...attempts.slice(0, -1), { ...attempts.at(-1)!, rubric }] : attempts;
+      const latest = attempts.at(-1);
+      const draftMatchesLatest = Boolean(latest && current[activeQuestionKey]?.draft?.trim() === latest.answer);
+      const nextAttempts = draftMatchesLatest ? [...attempts.slice(0, -1), { ...latest!, rubric }] : attempts;
       return { ...current, [activeQuestionKey]: { ...current[activeQuestionKey], rubric, attempts: nextAttempts } };
     });
   };
@@ -180,18 +218,19 @@ export function InterviewLibrary() {
         <aside className="interview-filters">
           <label><span>SEARCH QUESTIONS</span><input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setShowAllQuestions(false); }} placeholder="公司、岗位、问题或主题" /></label>
           <div className="interview-focus-filter"><span>按追问方向筛选</span>{interviewFocuses.map((item) => <button className={focus === item ? 'active' : ''} type="button" aria-pressed={focus === item} onClick={() => { setFocus(item); setShowAllQuestions(false); }} key={item}>{item}<b>{item === '全部' ? interviewPromptCount : interviewRecords.filter((record) => record.focuses.includes(item)).reduce((total, record) => total + record.prompts.length, 0)}</b></button>)}</div>
+          <div className="interview-practice-filter"><span>按练习状态筛选</span>{practiceFilters.map((item) => { const count = item === '全部' ? matchingQuestions.length : item === '已练' ? matchingPracticedCount : matchingQuestions.length - matchingPracticedCount; return <button className={practiceFilter === item ? 'active' : ''} type="button" aria-pressed={practiceFilter === item} onClick={() => { setPracticeFilter(item); setShowAllQuestions(false); }} key={item}><span>{item}</span><b>{count}</b></button>; })}</div>
           <div className="interview-boundary"><span>怎么使用</span><p>先尝试回答卡片里的改写问题，再打开原帖补上下文。不要根据一条经历推断 HC、难度或公司统一偏好。</p></div>
         </aside>
 
         <div className="interview-results">
           <section className="real-question-index" id="real-questions">
-            <div className="real-question-index-head"><div><span>REAL QUESTION INDEX</span><h2>先刷真题，再回到完整面经理解上下文。</h2></div><p><strong>{filteredQuestions.length}</strong> 道匹配问题 · 经过摘要与改写</p></div>
+            <div className="real-question-index-head"><div><span>REAL QUESTION INDEX</span><h2>先刷真题，再回到完整面经理解上下文。</h2></div><div className="real-question-index-actions"><p><strong>{filteredQuestions.length}</strong> 道匹配问题 · 经过摘要与改写</p><button type="button" disabled={matchingQuestions.length === 0} onClick={openNextQuestion}>{nextUnpracticedQuestion ? '练下一道待练题' : '查看一题准备复答'} <span>→</span></button></div></div>
             {visibleQuestions.length > 0 ? <div className="real-question-grid">{visibleQuestions.map(({ record, prompt, promptIndex }, index) => (
-              <article className="real-question-card" key={`${record.id}-${promptIndex}`}>
+              <article className={`real-question-card${(practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) > 0 ? ' practiced' : ''}`} key={`${record.id}-${promptIndex}`}>
                 <div><span>Q{String(index + 1).padStart(2, '0')}</span><span>{record.company}</span><span>{record.published}</span></div>
                 <small>{record.role} · {record.focuses.join(' / ')}</small>
                 <h3>{prompt}</h3>
-                <div><button type="button" onClick={() => startQuestion(record.id, promptIndex)}>90 秒作答 →</button><a href={sitePath(`/interviews/${record.id}/`)}>上下文</a><a href={record.sourceHref} target="_blank" rel="noreferrer">原帖 ↗</a></div>
+                <div><button type="button" onClick={() => startQuestion(record.id, promptIndex)}>{(practiceProgress[interviewQuestionKey(record.id, promptIndex)]?.attempts?.length ?? 0) > 0 ? '查看 / 复答' : '90 秒作答'} →</button><a href={sitePath(`/interviews/${record.id}/`)}>上下文</a><a href={record.sourceHref} target="_blank" rel="noreferrer">原帖 ↗</a></div>
               </article>
             ))}</div> : <div className="interview-empty"><strong>没有匹配的真题</strong><p>减少筛选条件，或搜索 RAG、Agent、量化、多模态等主题。</p></div>}
             {filteredQuestions.length > 12 && <button className="real-question-more" type="button" onClick={() => setShowAllQuestions((visible) => !visible)}>{showAllQuestions ? '收起真题' : `展开全部 ${filteredQuestions.length} 道真题`} <span>{showAllQuestions ? '↑' : '↓'}</span></button>}
@@ -207,18 +246,19 @@ export function InterviewLibrary() {
                   <div>
                     <div className="answer-recorder interview-answer-recorder">
                       <div className="answer-recorder-head"><span>YOUR ANSWER · 只保存在当前设备</span><strong>{formatCountdown(secondsLeft)}</strong></div>
-                      <textarea value={activeProgress.draft ?? ''} onChange={(event) => setDraft(event.target.value)} placeholder={'先直接回答，再补：\n1. 输入与关键机制\n2. 收益、代价和适用条件\n3. 指标、项目证据或失败边界'} />
-                      <div className="answer-recorder-actions"><button type="button" onClick={toggleTimer}>{secondsLeft === 0 ? '重新计时' : timerRunning ? '暂停' : '继续计时'}</button><button className="save-attempt" type="button" disabled={!activeProgress.draft?.trim()} onClick={saveAttempt}>保存本次作答</button><span aria-live="polite">{practiceStatus}</span></div>
+                      <textarea aria-label="面经真题作答" value={activeProgress.draft ?? ''} onChange={(event) => setDraft(event.target.value)} placeholder={'先直接回答，再补：\n1. 输入与关键机制\n2. 收益、代价和适用条件\n3. 指标、项目证据或失败边界'} />
+                      <div className="answer-recorder-actions"><button type="button" onClick={toggleTimer}>{secondsLeft === 0 ? '重新计时' : timerRunning ? '暂停' : '继续计时'}</button>{(activeAttempts.length > 0 || activeProgress.draft?.trim()) && <button type="button" onClick={beginFreshAttempt}>清空草稿，开始新一轮</button>}<button className="save-attempt" type="button" disabled={!activeProgress.draft?.trim()} onClick={saveAttempt}>保存本次作答</button><span aria-live="polite">{practiceStatus}</span></div>
                     </div>
+                    {previousAttempt && latestAttempt && <div className="interview-attempt-compare"><div><span>PREVIOUS</span><strong>{previousScore}<b>/4</b></strong><small>{previousAttempt.answer.length} 字</small></div><div><span>LATEST</span><strong>{latestScore}<b>/4</b></strong><small>{latestAttempt.answer.length} 字</small></div><p>自评变化 {latestScore - previousScore >= 0 ? '+' : ''}{latestScore - previousScore}；长度只用于观察表达变化，不代表答案质量。</p></div>}
                     {(activeProgress.attempts?.length ?? 0) > 0 && <details className="attempt-history"><summary>查看历史作答 · {activeProgress.attempts?.length} 次 <span>＋</span></summary><ol>{[...(activeProgress.attempts ?? [])].reverse().map((attempt, index) => <li key={`${attempt.savedAt}-${index}`}><span>{new Date(attempt.savedAt).toLocaleString('zh-CN')} · 自评 {attempt.rubric.filter(Boolean).length}/4</span><p>{attempt.answer}</p></li>)}</ol></details>}
                   </div>
                   <aside className="interview-answer-coach">
-                    <div><span>30 秒回答骨架</span>{answerFramesFor(activeQuestion.record).map((item) => <p key={item.focus}><b>{item.focus}</b>{item.frame}</p>)}</div>
+                    <div><span>这道题的回答主线</span>{activeAnswerFrame && <p><b>{activeAnswerFrame.focus}</b>{activeAnswerFrame.frame}</p>}<small className="interview-theme-cue">结合本场主题：{activeQuestion.record.themes.slice(0, 3).join(' · ')}</small></div>
                     <div><span>完成后自评</span><ul className="answer-rubric">{interviewAnswerRubric.map((item, index) => <li key={item.title}><button type="button" className={activeProgress.rubric?.[index] ? 'checked' : ''} aria-pressed={Boolean(activeProgress.rubric?.[index])} onClick={() => toggleRubric(index)}><span>{activeProgress.rubric?.[index] ? '✓' : String(index + 1).padStart(2, '0')}</span><div><strong>{item.title}</strong><small>{item.detail}</small></div></button></li>)}</ul></div>
                     <div className="interview-followup-coach"><span>下一轮可能怎样追问</span><p>{activeQuestion.record.preparation}</p></div>
                   </aside>
                 </div>
-                <footer><a href={sitePath(`/interviews/${activeQuestion.record.id}/`)}>查看完整面经上下文 →</a><a href={sitePath(activeQuestion.record.practiceHref)}>补对应知识与结构题 →</a>{activeQuestion.record.labHref && <a href={sitePath(activeQuestion.record.labHref)}>打开关联实验 →</a>}</footer>
+                <footer><button type="button" disabled={matchingQuestions.length === 0} onClick={openNextQuestion}>{nextUnpracticedQuestion ? '下一道待练题' : '打开一题准备复答'} <span>→</span></button><a href={sitePath(`/interviews/${activeQuestion.record.id}/`)}>查看完整面经上下文 →</a><a href={sitePath(activeQuestion.record.practiceHref)}>补对应知识与结构题 →</a>{activeQuestion.record.labHref && <a href={sitePath(activeQuestion.record.labHref)}>打开关联实验 →</a>}</footer>
               </> : <div className="interview-practice-empty"><span>INTERVIEW PRACTICE</span><h2>从上面的任意真题开始，留下第一版答案。</h2><p>系统提供 90 秒计时、回答骨架和四项自评；草稿、历史版本和完成进度只保存在当前设备。</p></div>}
             </section>
           </section>

@@ -32,10 +32,26 @@ const answerFrames: Record<InterviewFocus, string> = {
   '工程与系统': '先测瓶颈 → 定位计算/访存/调度 → 优化 → 对冲指标与硬件边界',
 };
 
+const focusKeywords: Record<InterviewFocus, string[]> = {
+  '模型基础': ['attention', 'transformer', 'rope', 'lora', 'moe', 'llama', 'embedding', 'normalization', 'loss', 'mha', 'gqa', 'mqa', 'mla', 'position'],
+  '训练与对齐': ['训练', '微调', 'sft', 'ppo', 'grpo', 'dpo', '强化学习', '初始化', 'rank', '预训练', 'reward'],
+  'RAG / Agent': ['rag', 'agent', '检索', '召回', '重排', 'function calling', '记忆', '工具', 'mcp', 'a2a', 'react', 'reflection', 'plan-and-solve', '行程'],
+  '多模态': ['多模态', '图像', '图片', '视频', 'clip', 'blip', 'vit', '3d', '点云', '雷达', 'stable diffusion', 'nerf', 'sdf', '跨模态'],
+  '推荐 + LLM': ['推荐', '曝光', '排序', 'ndcg', '业务', '线上目标'],
+  '工程与系统': ['cuda', 'gpu', 'kv cache', 'vllm', 'trt-llm', '量化', 'w4a16', 'int8', 'fp8', '算子', '吞吐', '延迟', 'ttft', '调度', '缓存', '消息', 'redis', 'mongodb', 'pipeline', 'timing', 'scaling factor', '显存'],
+};
+
 export function interviewQuestionKey(recordId: string, promptIndex: number) {
   return `${recordId}:${promptIndex}`;
 }
 
-export function answerFramesFor(record: InterviewRecord) {
-  return record.focuses.map((focus) => ({ focus, frame: answerFrames[focus] }));
+export function answerFrameForQuestion(record: InterviewRecord, prompt: string) {
+  const normalized = prompt.toLowerCase();
+  const ranked = record.focuses.map((focus, index) => ({
+    focus,
+    index,
+    score: focusKeywords[focus].filter((keyword) => normalized.includes(keyword)).length,
+  })).sort((a, b) => b.score - a.score || a.index - b.index);
+  const focus = ranked[0]?.focus ?? record.focuses[0];
+  return { focus, frame: answerFrames[focus] };
 }
