@@ -25,8 +25,10 @@ export function LabsExperience() {
   useEffect(() => {
     const requestedLab = new URLSearchParams(window.location.search).get('lab');
     const initialLab = labIds.includes(requestedLab as LabId) ? requestedLab as LabId : 'tokenizer';
-    setActiveLab(initialLab);
-    trackEvent('lab_open', { lab_id: initialLab });
+    queueMicrotask(() => {
+      setActiveLab(initialLab);
+      trackEvent('lab_open', { lab_id: initialLab });
+    });
   }, []);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export function LabsExperience() {
   }, [activeLab]);
 
   function selectLab(lab: LabId) {
+    if (lab === activeLab) return;
     setActiveLab(lab);
     trackEvent('lab_open', { lab_id: lab });
     const url = new URL(window.location.href);

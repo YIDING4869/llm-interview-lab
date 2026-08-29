@@ -24,7 +24,7 @@ export function FeedbackLink() {
       '我的背景（可选）：零基础 / 转码 / ML 背景',
     ].join('\n');
     const params = new URLSearchParams({ title: '[反馈] ', body, labels: 'feedback' });
-    setHref(`${issueBase}?${params.toString()}`);
+    queueMicrotask(() => setHref(`${issueBase}?${params.toString()}`));
   }, []);
 
   return <a className="feedback-fab" href={href} target="_blank" rel="noreferrer" aria-label="提交网站反馈">反馈建议 <span>↗</span></a>;

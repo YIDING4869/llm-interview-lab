@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'LLM Interview Lab — 中文大模型面试学习与可视化',
   description: '从零到一学习 LLM：基础课程、面试题、国内面经、Transformer 可视化实验、前沿论文与个人 Notes。',
+  alternates: { canonical: siteUrl },
   manifest: 'manifest.webmanifest',
   icons: {
     icon: [{ url: 'icon-192.png', type: 'image/png' }],

@@ -27,13 +27,26 @@ export function LearnExperience() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem('llm-interview-lab-progress-v1');
-    if (!saved) return;
-    try {
-      setProgress(JSON.parse(saved) as StoredProgress);
-    } catch {
-      window.localStorage.removeItem('llm-interview-lab-progress-v1');
-    }
+    const requestedRoute = new URLSearchParams(window.location.search).get('route');
+    queueMicrotask(() => {
+      if (requestedRoute && entryRoutes.some((route) => route.id === requestedRoute)) {
+        setActiveRouteId(requestedRoute as (typeof entryRoutes)[number]['id']);
+      }
+      if (!saved) return;
+      try {
+        setProgress(JSON.parse(saved) as StoredProgress);
+      } catch {
+        window.localStorage.removeItem('llm-interview-lab-progress-v1');
+      }
+    });
   }, []);
+
+  const selectRoute = (routeId: (typeof entryRoutes)[number]['id']) => {
+    setActiveRouteId(routeId);
+    const url = new URL(window.location.href);
+    url.searchParams.set('route', routeId);
+    window.history.replaceState({}, '', url);
+  };
 
   return (
     <main className="knowledge-page">
@@ -57,7 +70,7 @@ export function LearnExperience() {
         <div className="compact-section-head"><div><p className="section-kicker">STEP 01 / CHOOSE YOUR ENTRY</p><h2>你不需要从同一个起点出发。</h2></div><p>时间是建议强度，不是承诺。判断标准是阶段产物能否独立完成，而不是视频看完了多少。</p></div>
         <div className="entry-route-tabs" role="tablist" aria-label="选择学习起点">
           {entryRoutes.map((route) => (
-            <button className={`entry-route-tab route-${route.color} ${activeRoute.id === route.id ? 'active' : ''}`} key={route.id} type="button" onClick={() => setActiveRouteId(route.id)} role="tab" aria-selected={activeRoute.id === route.id}>
+            <button className={`entry-route-tab route-${route.color} ${activeRoute.id === route.id ? 'active' : ''}`} key={route.id} type="button" onClick={() => selectRoute(route.id)} role="tab" aria-selected={activeRoute.id === route.id}>
               <span className="entry-tab-label">{route.label}</span>
               <strong>{route.title}</strong>
               <p>{route.audience}</p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { knowledgeModules, learningResources } from '../../data/curriculum';
@@ -9,6 +9,7 @@ import { practiceQuestions } from '../../data/practice';
 import { sitePath } from '../../lib/site-path';
 
 const lessonStorageKey = 'llm-interview-lab-lesson-progress-v1';
+const practiceStorageKey = 'llm-interview-lab-progress-v1';
 
 export function LessonWorkspace() {
   const [activeLessonId, setActiveLessonId] = useState(foundationLessons[0].id);
@@ -19,20 +20,45 @@ export function LessonWorkspace() {
 
   useEffect(() => {
     const requestedLesson = new URLSearchParams(window.location.search).get('lesson');
-    if (requestedLesson && foundationLessons.some((lesson) => lesson.id === requestedLesson)) setActiveLessonId(requestedLesson);
     const saved = window.localStorage.getItem(lessonStorageKey);
-    if (saved) {
-      try {
-        setCompleted(JSON.parse(saved) as Record<string, boolean>);
-      } catch {
-        window.localStorage.removeItem(lessonStorageKey);
+    queueMicrotask(() => {
+      if (requestedLesson && foundationLessons.some((lesson) => lesson.id === requestedLesson)) setActiveLessonId(requestedLesson);
+      if (saved) {
+        try {
+          setCompleted(JSON.parse(saved) as Record<string, boolean>);
+        } catch {
+          window.localStorage.removeItem(lessonStorageKey);
+        }
       }
-    }
-    setHydrated(true);
+      setHydrated(true);
+    });
   }, []);
 
   useEffect(() => {
-    if (hydrated) window.localStorage.setItem(lessonStorageKey, JSON.stringify(completed));
+    if (!hydrated) return;
+    window.localStorage.setItem(lessonStorageKey, JSON.stringify(completed));
+
+    const savedPractice = window.localStorage.getItem(practiceStorageKey);
+    let practiceProgress: Record<string, { steps?: Record<string, boolean> }> = {};
+    if (savedPractice) {
+      try {
+        practiceProgress = JSON.parse(savedPractice) as typeof practiceProgress;
+      } catch {
+        window.localStorage.removeItem(practiceStorageKey);
+      }
+    }
+    let changed = false;
+    for (const knowledgeModule of knowledgeModules) {
+      const moduleLessons = lessonsForModule(knowledgeModule.id);
+      if (moduleLessons.length === 0 || !moduleLessons.every((lesson) => completed[lesson.id])) continue;
+      if (practiceProgress[knowledgeModule.id]?.steps?.understand) continue;
+      practiceProgress[knowledgeModule.id] = {
+        ...practiceProgress[knowledgeModule.id],
+        steps: { ...practiceProgress[knowledgeModule.id]?.steps, understand: true },
+      };
+      changed = true;
+    }
+    if (changed) window.localStorage.setItem(practiceStorageKey, JSON.stringify(practiceProgress));
   }, [completed, hydrated]);
 
   const activeLesson = foundationLessons.find((lesson) => lesson.id === activeLessonId) ?? foundationLessons[0];
@@ -45,10 +71,7 @@ export function LessonWorkspace() {
   const checkpointCorrect = checkpointChecked && selectedCheckpointOption === activeLesson.checkpoint.correctIndex;
   const moduleQuestion = practiceQuestions.find((question) => question.moduleId === activeLesson.moduleId);
   const lessonResourceIds = activeLesson.resourceIds ?? moduleQuestion?.resourceIds ?? [];
-  const moduleResources = useMemo(
-    () => learningResources.filter((resource) => lessonResourceIds.includes(resource.id)).slice(0, 3),
-    [lessonResourceIds],
-  );
+  const moduleResources = learningResources.filter((resource) => lessonResourceIds.includes(resource.id)).slice(0, 3);
   const modulesWithLessons = knowledgeModules.filter((module) => lessonsForModule(module.id).length > 0);
 
   function selectLesson(lessonId: string) {

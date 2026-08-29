@@ -32,12 +32,10 @@ export function SamplingLab() {
       .sort((left, right) => right.baseProbability - left.baseProbability)
       .slice(0, topK);
 
-    let cumulative = 0;
-    const nucleus = ranked.filter((candidate, index) => {
-      const include = index === 0 || cumulative < topP;
-      cumulative += candidate.baseProbability;
-      return include;
-    });
+    const nucleus = ranked.reduce<{ selected: typeof ranked; cumulative: number }>((state, candidate, index) => ({
+      selected: index === 0 || state.cumulative < topP ? [...state.selected, candidate] : state.selected,
+      cumulative: state.cumulative + candidate.baseProbability,
+    }), { selected: [], cumulative: 0 }).selected;
     const keptMass = nucleus.reduce((sum, candidate) => sum + candidate.baseProbability, 0);
     const rows = candidates.map((candidate) => {
       const kept = nucleus.find((item) => item.token === candidate.token);

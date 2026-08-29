@@ -34,8 +34,17 @@ function formatTimer(total: number) {
   return `${minutes}:${seconds}`;
 }
 
+function secondsForPractice(time: string) {
+  const minutes = time.match(/(\d+)\s*分钟/);
+  if (minutes) return Number(minutes[1]) * 60;
+  const seconds = time.match(/(\d+)\s*秒/);
+  return seconds ? Number(seconds[1]) : 90;
+}
+
+const dailyQuestion = practiceQuestions.find((question) => question.moduleId === 'inference') ?? practiceQuestions[0];
+
 export default function Home() {
-  const [secondsLeft, setSecondsLeft] = useState(90);
+  const [secondsLeft, setSecondsLeft] = useState(() => secondsForPractice(dailyQuestion.time));
   const [timerRunning, setTimerRunning] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [activeCategory, setActiveCategory] = useState<(typeof practiceCategories)[number]>('全部');
@@ -49,14 +58,15 @@ export default function Home() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem('llm-interview-lab-notes');
-    if (saved) setNotes(saved);
-
     const requestedQuestion = Number(new URLSearchParams(window.location.search).get('question'));
     const matchedQuestion = practiceQuestions.find((question) => question.id === requestedQuestion);
-    if (matchedQuestion) {
-      setSelectedId(matchedQuestion.id);
-      setActiveCategory(matchedQuestion.category);
-    }
+    queueMicrotask(() => {
+      if (saved) setNotes(saved);
+      if (matchedQuestion) {
+        setSelectedId(matchedQuestion.id);
+        setActiveCategory(matchedQuestion.category);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -78,7 +88,6 @@ export default function Home() {
     [activeCategory],
   );
   const selectedQuestion = practiceQuestions.find((question) => question.id === selectedId) ?? practiceQuestions[0];
-  const dailyQuestion = practiceQuestions.find((question) => question.moduleId === 'inference') ?? practiceQuestions[0];
   const kvMemoryGb = (2 * 32 * kvHeads * 128 * contextLength * batchSize * 2) / 1024 ** 3;
 
   const selectCategory = (category: (typeof practiceCategories)[number]) => {
@@ -89,7 +98,7 @@ export default function Home() {
 
   const handleTimer = () => {
     if (secondsLeft === 0) {
-      setSecondsLeft(90);
+      setSecondsLeft(secondsForPractice(dailyQuestion.time));
       setTimerRunning(true);
       dailyPracticeStarted.current = true;
       trackEvent('practice_start', { surface: 'home', module_id: dailyQuestion.moduleId, question_id: dailyQuestion.id });
@@ -119,7 +128,7 @@ export default function Home() {
             从原理理解到限时表达，从第一问到连续追问。为 LLM、Agent、后训练与推理岗位准备的一站式学习实验室。
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href={sitePath('/practice/?module=transformer&quickstart=1#answer')}>3 分钟开始体验 <span>→</span></a>
+            <a className="primary-button" href={sitePath('/practice/?module=transformer&quickstart=1')}>3 分钟开始体验 <span>→</span></a>
             <a className="text-button" href={sitePath(`/lessons/?lesson=${foundationLessons[0].id}`)}>零基础从第一课开始 <span>↗</span></a>
           </div>
           <p className="quickstart-caption">无需注册 · 30 秒作答 · 对照答案结构 · 打开可视化实验</p>
@@ -156,7 +165,7 @@ export default function Home() {
         </div>
         <div className="home-entry-grid">
           {entryRoutes.map((route, index) => (
-            <a className={`home-entry-card route-${route.color}`} href={sitePath('/learn/#entry-routes')} key={route.id}>
+            <a className={`home-entry-card route-${route.color}`} href={sitePath(`/learn/?route=${route.id}#entry-routes`)} key={route.id}>
               <div><span>{(index + 1).toString().padStart(2, '0')}</span><span>{route.label}</span></div>
               <h3>{route.title}</h3>
               <p>{route.audience}</p>

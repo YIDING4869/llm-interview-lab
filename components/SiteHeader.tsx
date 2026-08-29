@@ -9,7 +9,7 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const quickstartHref = sitePath('/practice/?module=transformer&quickstart=1#answer');
+  const quickstartHref = sitePath('/practice/?module=transformer&quickstart=1');
   const links = [
     { id: 'learn', label: '学习地图', href: sitePath('/learn/') },
     { id: 'lessons', label: '基础课', href: sitePath('/lessons/') },

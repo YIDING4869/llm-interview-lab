@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { entryRoutes, knowledgeModules, learningResources } from '../../data/curriculum';
@@ -63,23 +63,30 @@ export function PracticeWorkspace() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
-    if (saved) {
-      try {
-        setProgress(JSON.parse(saved) as ProgressRecord);
-      } catch {
-        window.localStorage.removeItem(storageKey);
-      }
-    }
-
     const params = new URLSearchParams(window.location.search);
     const requestedModule = params.get('module');
-    setQuickstart(params.get('quickstart') === '1');
-    if (requestedModule && knowledgeModules.some((module) => module.id === requestedModule)) {
-      setActiveModuleId(requestedModule);
-      const matchingRoute = entryRoutes.find((route) => route.sequence.includes(requestedModule));
-      if (matchingRoute) setActiveRouteId(matchingRoute.id);
-    }
-    setHydrated(true);
+    const requestedRoute = params.get('route');
+    queueMicrotask(() => {
+      if (saved) {
+        try {
+          setProgress(JSON.parse(saved) as ProgressRecord);
+        } catch {
+          window.localStorage.removeItem(storageKey);
+        }
+      }
+
+      setQuickstart(params.get('quickstart') === '1');
+      if (requestedModule && knowledgeModules.some((module) => module.id === requestedModule)) {
+        setActiveModuleId(requestedModule);
+        const matchingRoute = entryRoutes.find((route) => route.sequence.includes(requestedModule));
+        if (matchingRoute) setActiveRouteId(matchingRoute.id);
+      } else if (requestedRoute && entryRoutes.some((route) => route.id === requestedRoute)) {
+        const route = entryRoutes.find((item) => item.id === requestedRoute) ?? entryRoutes[0];
+        setActiveRouteId(route.id);
+        setActiveModuleId(route.sequence[0]);
+      }
+      setHydrated(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -99,10 +106,12 @@ export function PracticeWorkspace() {
   const rubric = progress[activeModule.id]?.rubric ?? [];
 
   useEffect(() => {
-    setSecondsLeft(secondsForQuestion(question.time));
-    setTimerRunning(false);
-    startedQuestionRef.current = null;
-    setAnswerStatus('回答草稿会自动保存在此设备');
+    queueMicrotask(() => {
+      setSecondsLeft(secondsForQuestion(question.time));
+      setTimerRunning(false);
+      startedQuestionRef.current = null;
+      setAnswerStatus('回答草稿会自动保存在此设备');
+    });
   }, [question.id, question.time]);
 
   useEffect(() => {
@@ -120,26 +129,36 @@ export function PracticeWorkspace() {
     return () => window.clearInterval(timer);
   }, [timerRunning]);
 
-  const routeProgress = useMemo(() => {
-    const completedSteps = activeRoute.sequence.reduce((total, moduleId) => {
-      const moduleSteps = progress[moduleId]?.steps ?? {};
-      return total + stepDefinitions.filter((step) => moduleSteps[step.id]).length;
-    }, 0);
-    return {
-      completedSteps,
-      totalSteps: activeRoute.sequence.length * stepDefinitions.length,
-      percent: Math.round((completedSteps / (activeRoute.sequence.length * stepDefinitions.length)) * 100),
-      completeModules: activeRoute.sequence.filter((moduleId) => stepDefinitions.every((step) => progress[moduleId]?.steps?.[step.id])).length,
-    };
-  }, [activeRoute, progress]);
+  const completedRouteSteps = activeRoute.sequence.reduce((total, moduleId) => {
+    const moduleSteps = progress[moduleId]?.steps ?? {};
+    return total + stepDefinitions.filter((step) => moduleSteps[step.id]).length;
+  }, 0);
+  const routeProgress = {
+    completedSteps: completedRouteSteps,
+    totalSteps: activeRoute.sequence.length * stepDefinitions.length,
+    percent: Math.round((completedRouteSteps / (activeRoute.sequence.length * stepDefinitions.length)) * 100),
+    completeModules: activeRoute.sequence.filter((moduleId) => stepDefinitions.every((step) => progress[moduleId]?.steps?.[step.id])).length,
+  };
 
   const setRoute = (routeId: (typeof entryRoutes)[number]['id']) => {
     const route = entryRoutes.find((item) => item.id === routeId) ?? entryRoutes[0];
     setActiveRouteId(route.id);
+    const url = new URL(window.location.href);
+    url.searchParams.set('route', route.id);
     if (!route.sequence.includes(activeModuleId)) {
       const nextIncomplete = route.sequence.find((moduleId) => !stepDefinitions.every((step) => progress[moduleId]?.steps?.[step.id]));
-      setActiveModuleId(nextIncomplete ?? route.sequence[0]);
+      const nextModuleId = nextIncomplete ?? route.sequence[0];
+      setActiveModuleId(nextModuleId);
+      url.searchParams.set('module', nextModuleId);
     }
+    window.history.replaceState({}, '', url);
+  };
+
+  const selectModule = (moduleId: string) => {
+    setActiveModuleId(moduleId);
+    const url = new URL(window.location.href);
+    url.searchParams.set('module', moduleId);
+    window.history.replaceState({}, '', url);
   };
 
   const toggleStep = (stepId: StepId) => {
@@ -189,6 +208,7 @@ export function PracticeWorkspace() {
       question_id: question.id,
       quickstart,
       answer_length: answer.length,
+      attempt_number: attempts.length + 1,
     });
   };
 
@@ -251,7 +271,7 @@ export function PracticeWorkspace() {
   const nextModule = knowledgeModules.find((module) => module.id === nextModuleId);
 
   return (
-    <main className="practice-page">
+    <main className={`practice-page${quickstart ? ' quickstart-mode' : ''}`}>
       <SiteHeader active="practice" />
 
       <section className="loop-hero">
@@ -289,7 +309,7 @@ export function PracticeWorkspace() {
             {routeModules.map((module) => {
               if (!module) return null;
               const moduleDone = stepDefinitions.filter((step) => progress[module.id]?.steps?.[step.id]).length;
-              return <button className={activeModule.id === module.id ? 'active' : ''} type="button" key={module.id} onClick={() => setActiveModuleId(module.id)}><i>{module.order}</i><span><strong>{module.title}</strong><small>{module.cluster}</small></span><b className={moduleDone === 4 ? 'complete' : ''}>{moduleDone === 4 ? '✓' : `${moduleDone}/4`}</b></button>;
+              return <button className={activeModule.id === module.id ? 'active' : ''} type="button" key={module.id} onClick={() => selectModule(module.id)}><i>{module.order}</i><span><strong>{module.title}</strong><small>{module.cluster}</small></span><b className={moduleDone === 4 ? 'complete' : ''}>{moduleDone === 4 ? '✓' : `${moduleDone}/4`}</b></button>;
             })}
           </div>
         </aside>
@@ -320,7 +340,7 @@ export function PracticeWorkspace() {
           </section>
 
           <section className="loop-panel answer-practice-panel" id="answer">
-            <div className="loop-panel-label"><span>02</span><strong>作答 / ANSWER</strong></div>
+            <div className="loop-panel-label"><span>{quickstart ? '01' : '02'}</span><strong>{quickstart ? '快速作答 / QUICK ANSWER' : '作答 / ANSWER'}</strong></div>
             <div className="checkpoint-question"><div><span>{question.category} · {question.difficulty}</span><b>{question.time}</b></div><h3>{question.title}</h3><p><strong>提示：</strong>{question.hint}</p></div>
             <div className="answer-recorder">
               <div className="answer-recorder-head"><span>YOUR ANSWER</span><strong>{formatCountdown(secondsLeft)}</strong></div>
@@ -332,7 +352,8 @@ export function PracticeWorkspace() {
               </div>
             </div>
             {attempts.length > 0 && <details className="attempt-history"><summary>查看历史作答 · {attempts.length} 次 <span>＋</span></summary><ol>{[...attempts].reverse().map((attempt, index) => <li key={`${attempt.savedAt}-${index}`}><span>{new Date(attempt.savedAt).toLocaleString('zh-CN')}</span><p>{attempt.answer}</p></li>)}</ol></details>}
-            <details className="answer-reveal"><summary>完成限时作答后，查看答案结构 <span>＋</span></summary><div><p>{question.answer}</p><strong>必答点 · 点击完成自评</strong><ul className="answer-rubric">{question.points.map((point, index) => <li key={point}><button type="button" className={rubric[index] ? 'checked' : ''} aria-pressed={Boolean(rubric[index])} onClick={() => toggleRubric(index)}><span>{rubric[index] ? '✓' : String(index + 1).padStart(2, '0')}</span>{point}</button></li>)}</ul><aside><span>FOLLOW-UP</span><p>{question.followup}</p></aside></div></details>
+            <details className="answer-reveal" {...(quickstart && attempts.length > 0 ? { open: true } : {})}><summary>完成限时作答后，查看答案结构 <span>＋</span></summary><div><p>{question.answer}</p><strong>必答点 · 点击完成自评</strong><ul className="answer-rubric">{question.points.map((point, index) => <li key={point}><button type="button" className={rubric[index] ? 'checked' : ''} aria-pressed={Boolean(rubric[index])} onClick={() => toggleRubric(index)}><span>{rubric[index] ? '✓' : String(index + 1).padStart(2, '0')}</span>{point}</button></li>)}</ul><aside><span>FOLLOW-UP</span><p>{question.followup}</p></aside></div></details>
+            {quickstart && attempts.length > 0 && question.labHref && <div className="quickstart-next-actions"><a className="quickstart-lab-link" href={sitePath(question.labHref)}>02 · 打开 Attention 可视化实验 <span>→</span></a><a href={sitePath(`/practice/?module=${activeModule.id}`)}>继续完整 Transformer 学习闭环 ↗</a></div>}
             <div className="loop-panel-actions"><a href={sitePath(`/?question=${question.id}#question-bank`)}>在完整题库中打开 Q{question.id.toString().padStart(2, '0')} →</a></div>
           </section>
 
@@ -352,7 +373,7 @@ export function PracticeWorkspace() {
 
           <div className="module-next-row">
             <span>{finishedSteps === 4 ? '本模块闭环已完成。' : `还差 ${4 - finishedSteps} 个动作完成本模块。`}</span>
-            {nextModule ? <button type="button" onClick={() => setActiveModuleId(nextModule.id)}>下一个：{nextModule.title} →</button> : <a href={sitePath('/learn/')}>回到完整知识地图 →</a>}
+            {nextModule ? <button type="button" onClick={() => selectModule(nextModule.id)}>下一个：{nextModule.title} →</button> : <a href={sitePath('/learn/')}>回到完整知识地图 →</a>}
           </div>
         </div>
       </section>

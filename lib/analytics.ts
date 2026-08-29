@@ -13,6 +13,7 @@ type EventProperties = Record<string, string | number | boolean | undefined>;
 const attributionKey = 'llm-interview-lab-attribution-v1';
 const eventKey = 'llm-interview-lab-events-v1';
 const sessionKey = 'llm-interview-lab-session-v1';
+const siteEnterKey = 'llm-interview-lab-site-enter-v1';
 const campaignKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 
 function readJson<T>(storage: Storage, key: string, fallback: T): T {
@@ -79,4 +80,10 @@ export function trackEvent(name: AnalyticsEventName, properties: EventProperties
   }
 
   window.dispatchEvent(new CustomEvent('llm-lab:analytics', { detail: payload }));
+}
+
+export function trackSiteEnterOnce() {
+  if (typeof window === 'undefined' || window.sessionStorage.getItem(siteEnterKey)) return;
+  window.sessionStorage.setItem(siteEnterKey, '1');
+  trackEvent('site_enter');
 }
