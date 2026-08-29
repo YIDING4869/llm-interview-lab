@@ -7,7 +7,22 @@ import { entryRoutes, knowledgeModules } from '../data/curriculum';
 import { interviewRecords } from '../data/interviews';
 import { foundationLessons } from '../data/lessons';
 import { practiceCategories, practiceQuestions } from '../data/practice';
+import { readLastLearningActivity } from '../lib/learning-activity';
 import { sitePath } from '../lib/site-path';
+
+type ResumeCard = {
+  eyebrow: string;
+  title: string;
+  detail: string;
+  href: string;
+  badge: string;
+};
+
+type PracticeProgressSnapshot = Record<string, {
+  steps?: Record<string, boolean>;
+  questions?: Record<string, { attempts?: unknown[] }>;
+  attempts?: unknown[];
+}>;
 
 const roadmaps = [
   { index: '01', title: '基础、Transformer 与多模态', detail: 'Tokenizer、Attention、RoPE、视觉 token 与跨模态融合', count: '22 topics', tone: 'blue' },
@@ -52,13 +67,58 @@ export default function Home() {
   const [kvHeads, setKvHeads] = useState(8);
   const [notes, setNotes] = useState('');
   const [noteStatus, setNoteStatus] = useState('仅保存在此设备');
+  const [resumeCard, setResumeCard] = useState<ResumeCard | null>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem('llm-interview-lab-notes');
     const requestedQuestion = Number(new URLSearchParams(window.location.search).get('question'));
     const matchedQuestion = practiceQuestions.find((question) => question.id === requestedQuestion);
+    const lastActivity = readLastLearningActivity();
+    let nextResumeCard: ResumeCard | null = null;
+
+    if (lastActivity?.type === 'practice') {
+      const question = practiceQuestions.find((item) => item.id === lastActivity.questionId);
+      const knowledgeModule = knowledgeModules.find((item) => item.id === lastActivity.moduleId);
+      if (question && knowledgeModule) {
+        let snapshot: PracticeProgressSnapshot = {};
+        const savedProgress = window.localStorage.getItem('llm-interview-lab-progress-v1');
+        if (savedProgress) {
+          try { snapshot = JSON.parse(savedProgress) as PracticeProgressSnapshot; } catch { snapshot = {}; }
+        }
+        const moduleProgress = snapshot[knowledgeModule.id];
+        const finishedSteps = Object.values(moduleProgress?.steps ?? {}).filter(Boolean).length;
+        const attempts = moduleProgress?.questions?.[String(question.id)]?.attempts?.length ?? moduleProgress?.attempts?.length ?? 0;
+        nextResumeCard = {
+          eyebrow: '继续上次作答',
+          title: question.title,
+          detail: `${knowledgeModule.title} · ${finishedSteps}/4 个学习动作 · ${attempts} 次已保存作答`,
+          href: `/practice/?module=${knowledgeModule.id}&question=${question.id}#answer`,
+          badge: `${finishedSteps}/4`,
+        };
+      }
+    } else if (lastActivity?.type === 'lesson') {
+      const lesson = foundationLessons.find((item) => item.id === lastActivity.lessonId);
+      const knowledgeModule = knowledgeModules.find((item) => item.id === lastActivity.moduleId);
+      if (lesson && knowledgeModule) {
+        let completed: Record<string, boolean> = {};
+        const savedLessons = window.localStorage.getItem('llm-interview-lab-lesson-progress-v1');
+        if (savedLessons) {
+          try { completed = JSON.parse(savedLessons) as Record<string, boolean>; } catch { completed = {}; }
+        }
+        const finishedLessons = foundationLessons.filter((item) => completed[item.id]).length;
+        nextResumeCard = {
+          eyebrow: '继续上次课程',
+          title: lesson.title,
+          detail: `${knowledgeModule.title} · 已完成 ${finishedLessons}/${foundationLessons.length} 节`,
+          href: `/lessons/?lesson=${lesson.id}`,
+          badge: `${finishedLessons}/${foundationLessons.length}`,
+        };
+      }
+    }
+
     queueMicrotask(() => {
       if (saved) setNotes(saved);
+      if (nextResumeCard) setResumeCard(nextResumeCard);
       if (matchedQuestion) {
         setSelectedId(matchedQuestion.id);
         setActiveCategory(matchedQuestion.category);
@@ -119,7 +179,7 @@ export default function Home() {
             从原理理解到限时表达，从第一问到连续追问。为 LLM、Agent、后训练与推理岗位准备的一站式学习实验室。
           </p>
           <div className="hero-actions">
-            <a className="primary-button" href={sitePath('/practice/?module=transformer&quickstart=1')}>3 分钟开始体验 <span>→</span></a>
+            <a className="primary-button" href={sitePath('/practice/?module=transformer&quickstart=1#answer')}>3 分钟开始体验 <span>→</span></a>
             <a className="text-button" href={sitePath(`/lessons/${foundationLessons[0].id}/`)}>零基础从第一课开始 <span>↗</span></a>
           </div>
           <p className="quickstart-caption">无需注册 · 30 秒作答 · 对照答案结构 · 打开可视化实验</p>
@@ -144,9 +204,17 @@ export default function Home() {
               </button>
             </div>
           </div>
-          <div className="shell-footer"><span><i className="status-dot" /> 这里只做口头预演；保存答案请进入完整作答</span><a href={sitePath(`/practice/?module=${dailyQuestion.moduleId}&question=${dailyQuestion.id}`)}>进入完整作答 →</a></div>
+          <div className="shell-footer"><span><i className="status-dot" /> 这里只做口头预演；保存答案请进入完整作答</span><a href={sitePath(`/practice/?module=${dailyQuestion.moduleId}&question=${dailyQuestion.id}#answer`)}>进入完整作答 →</a></div>
         </div>
       </section>
+
+      {resumeCard && (
+        <section className="home-resume-section" aria-label="继续学习">
+          <div className="home-resume-copy"><span>{resumeCard.eyebrow}</span><h2>{resumeCard.title}</h2><p>{resumeCard.detail}</p></div>
+          <div className="home-resume-progress"><span>DEVICE PROGRESS</span><strong>{resumeCard.badge}</strong></div>
+          <a href={sitePath(resumeCard.href)}>从上次位置继续 <span>→</span></a>
+        </section>
+      )}
 
       <section className="home-entry-section">
         <div className="home-entry-head">
@@ -187,7 +255,7 @@ export default function Home() {
         <div className="section question-inner">
           <div className="section-head light-head">
             <div><p className="section-kicker">02 / QUESTION BANK</p><h2>不背标准答案，练习答案的结构。</h2></div>
-            <p>每道题包含短答案、必答点和连续追问。点击题目进入回答拆解。</p>
+            <div className="question-bank-head-action"><p>每道题包含短答案、必答点和连续追问。点击题目进入回答拆解。</p><a href={sitePath('/questions/')}>搜索完整题库 →</a></div>
           </div>
           <div className="filter-row" aria-label="题目分类">
             {practiceCategories.map((category) => (
@@ -212,7 +280,7 @@ export default function Home() {
               <h4>必答点</h4>
               <ul>{selectedQuestion.points.map((point) => <li key={point}>{point}</li>)}</ul>
               <div className="followup-box"><span>FOLLOW-UP</span><p>{selectedQuestion.followup}</p></div>
-              <div className="answer-panel-links"><a className="answer-module-link" href={sitePath(`/practice/?module=${selectedQuestion.moduleId}&question=${selectedQuestion.id}`)}>进入对应题目训练 <span>→</span></a><a href={sitePath(`/questions/${selectedQuestion.id}/`)}>打开独立题目页 ↗</a></div>
+              <div className="answer-panel-links"><a className="answer-module-link" href={sitePath(`/practice/?module=${selectedQuestion.moduleId}&question=${selectedQuestion.id}#answer`)}>进入对应题目训练 <span>→</span></a><a href={sitePath(`/questions/${selectedQuestion.id}/`)}>打开独立题目页 ↗</a></div>
             </article>
           </div>
         </div>

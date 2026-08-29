@@ -6,6 +6,7 @@ import { SiteHeader } from '../../components/SiteHeader';
 import { knowledgeModules, learningResources } from '../../data/curriculum';
 import { foundationLessons, lessonsForModule } from '../../data/lessons';
 import { practiceQuestions } from '../../data/practice';
+import { saveLastLearningActivity } from '../../lib/learning-activity';
 import { sitePath } from '../../lib/site-path';
 
 const lessonStorageKey = 'llm-interview-lab-lesson-progress-v1';
@@ -73,6 +74,11 @@ export function LessonWorkspace() {
   const lessonResourceIds = activeLesson.resourceIds ?? moduleQuestion?.resourceIds ?? [];
   const moduleResources = learningResources.filter((resource) => lessonResourceIds.includes(resource.id)).slice(0, 3);
   const modulesWithLessons = knowledgeModules.filter((module) => lessonsForModule(module.id).length > 0);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveLastLearningActivity({ type: 'lesson', moduleId: activeLesson.moduleId, lessonId: activeLesson.id });
+  }, [activeLesson.id, activeLesson.moduleId, hydrated]);
 
   function selectLesson(lessonId: string) {
     setActiveLessonId(lessonId);

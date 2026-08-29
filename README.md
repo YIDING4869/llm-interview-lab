@@ -26,6 +26,7 @@
 - `/learn/`：三类学习入口、分阶段计划和完整 LLM 知识树
 - `/lessons/`：覆盖 16 个模块的站内课程、检查题与学习连接
 - `/lessons/[lessonId]/`：可分享、可搜索的独立课程正文
+- `/questions/`：支持关键词、分类与难度筛选的完整题库
 - `/questions/[questionId]/`：可分享、可搜索的独立题目与答案结构
 - `/practice/`：模块学习闭环、路线进度、检查题、动手任务和 Notes
 - `/interviews/`：国内真实面经摘要、来源边界与岗位追问模式
@@ -52,10 +53,10 @@ npm run dev
 
 建议把不同渠道都指向“3 分钟体验”，并使用独立 UTM：
 
-- 知乎：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=zhihu&utm_medium=content&utm_campaign=launch_2026&utm_content=transformer_article`
-- 牛客：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=nowcoder&utm_medium=community&utm_campaign=launch_2026&utm_content=interview_post`
-- B 站：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=bilibili&utm_medium=video&utm_campaign=launch_2026&utm_content=transformer_demo`
-- 小红书：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=xiaohongshu&utm_medium=social&utm_campaign=launch_2026&utm_content=roadmap_cards`
+- 知乎：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=zhihu&utm_medium=content&utm_campaign=launch_2026&utm_content=transformer_article#answer`
+- 牛客：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=nowcoder&utm_medium=community&utm_campaign=launch_2026&utm_content=interview_post#answer`
+- B 站：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=bilibili&utm_medium=video&utm_campaign=launch_2026&utm_content=transformer_demo#answer`
+- 小红书：`https://yiding4869.github.io/llm-interview-lab/practice/?module=transformer&quickstart=1&utm_source=xiaohongshu&utm_medium=social&utm_campaign=launch_2026&utm_content=roadmap_cards#answer`
 
 站内会生成四个不包含答案正文的最小事件：`site_enter`、`practice_start`、`practice_complete`、`lab_open`。在未配置集中分析服务时，最近 100 条事件保存在浏览器的 `llm-interview-lab-events-v1` 本地记录中；配置 Google Analytics 后，同一批事件会自动上报。
 

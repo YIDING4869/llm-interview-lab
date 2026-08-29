@@ -9,12 +9,12 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ active = 'home' }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const quickstartHref = sitePath('/practice/?module=transformer&quickstart=1');
+  const quickstartHref = sitePath('/practice/?module=transformer&quickstart=1#answer');
   const links = [
     { id: 'learn', label: '学习地图', href: sitePath('/learn/') },
     { id: 'lessons', label: '基础课', href: sitePath('/lessons/') },
     { id: 'practice', label: '学习闭环', href: sitePath('/practice/') },
-    { id: 'questions', label: '面试题', href: sitePath('/#question-bank') },
+    { id: 'questions', label: '面试题', href: sitePath('/questions/') },
     { id: 'interviews', label: '国内面经', href: sitePath('/interviews/') },
     { id: 'labs', label: '可视化', href: sitePath('/labs/') },
     { id: 'resources', label: '资源库', href: sitePath('/resources/') },

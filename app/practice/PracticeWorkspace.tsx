@@ -7,6 +7,7 @@ import { entryRoutes, knowledgeModules, learningResources } from '../../data/cur
 import { lessonsForModule } from '../../data/lessons';
 import { practiceQuestions } from '../../data/practice';
 import { trackEvent } from '../../lib/analytics';
+import { saveLastLearningActivity } from '../../lib/learning-activity';
 import { sitePath } from '../../lib/site-path';
 
 const stepDefinitions = [
@@ -141,6 +142,11 @@ export function PracticeWorkspace() {
   const answerDraft = questionProgress.answerDraft ?? '';
   const attempts = questionProgress.attempts ?? [];
   const rubric = questionProgress.rubric ?? [];
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveLastLearningActivity({ type: 'practice', moduleId: activeModule.id, questionId: question.id });
+  }, [activeModule.id, hydrated, question.id]);
 
   useEffect(() => {
     queueMicrotask(() => {
