@@ -3,21 +3,33 @@
 import { useMemo, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
-import { interviewFocuses, interviewRecords, type InterviewFocus } from '../../data/interviews';
+import { interviewFocuses, interviewPromptCount, interviewRecords, type InterviewFocus } from '../../data/interviews';
 import { sitePath } from '../../lib/site-path';
 
 export function InterviewLibrary() {
   const [focus, setFocus] = useState<'全部' | InterviewFocus>('全部');
   const [query, setQuery] = useState('');
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
 
   const filteredRecords = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return interviewRecords.filter((record) => {
       const matchesFocus = focus === '全部' || record.focuses.includes(focus);
-      const text = `${record.company} ${record.role} ${record.campaign} ${record.summary} ${record.themes.join(' ')}`.toLowerCase();
+      const text = `${record.company} ${record.role} ${record.campaign} ${record.summary} ${record.themes.join(' ')} ${record.prompts.join(' ')}`.toLowerCase();
       return matchesFocus && (!normalized || text.includes(normalized));
     });
   }, [focus, query]);
+
+  const filteredQuestions = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return interviewRecords.flatMap((record) => record.prompts.map((prompt, promptIndex) => ({ record, prompt, promptIndex }))).filter(({ record, prompt }) => {
+      const matchesFocus = focus === '全部' || record.focuses.includes(focus);
+      const text = `${record.company} ${record.role} ${record.themes.join(' ')} ${prompt}`.toLowerCase();
+      return matchesFocus && (!normalized || text.includes(normalized));
+    });
+  }, [focus, query]);
+
+  const visibleQuestions = showAllQuestions ? filteredQuestions : filteredQuestions.slice(0, 12);
 
   return (
     <main className="interviews-page">
@@ -29,7 +41,7 @@ export function InterviewLibrary() {
           <div><p className="eyebrow"><span /> PUBLIC REPORTS / TRACEABLE SOURCES</p><h1>看真实追问怎样发生，<br /><em>不要把面经背成题库。</em></h1></div>
           <div className="interview-source-contract">
             <p>首批内容来自候选人公开复盘。页面保留发布日期、轮次、作者自述结果和原始链接；问题经过摘要与改写，不代表公司官方固定题目。</p>
-            <dl><div><dt>{interviewRecords.length}</dt><dd>公开记录</dd></div><div><dt>07</dt><dd>公司 / 业务群</dd></div><div><dt>首批</dt><dd>持续补充</dd></div></dl>
+            <dl><div><dt>{interviewRecords.length}</dt><dd>公开流程</dd></div><div><dt>{interviewPromptCount}</dt><dd>改写真题</dd></div><div><dt>可追溯</dt><dd>原帖来源</dd></div></dl>
           </div>
         </div>
       </section>
@@ -42,12 +54,25 @@ export function InterviewLibrary() {
 
       <section className="interview-library">
         <aside className="interview-filters">
-          <label><span>SEARCH REPORTS</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="公司、岗位或主题" /></label>
-          <div className="interview-focus-filter"><span>按追问方向筛选</span>{interviewFocuses.map((item) => <button className={focus === item ? 'active' : ''} type="button" aria-pressed={focus === item} onClick={() => setFocus(item)} key={item}>{item}<b>{item === '全部' ? interviewRecords.length : interviewRecords.filter((record) => record.focuses.includes(item)).length}</b></button>)}</div>
+          <label><span>SEARCH QUESTIONS</span><input type="search" value={query} onChange={(event) => { setQuery(event.target.value); setShowAllQuestions(false); }} placeholder="公司、岗位、问题或主题" /></label>
+          <div className="interview-focus-filter"><span>按追问方向筛选</span>{interviewFocuses.map((item) => <button className={focus === item ? 'active' : ''} type="button" aria-pressed={focus === item} onClick={() => { setFocus(item); setShowAllQuestions(false); }} key={item}>{item}<b>{item === '全部' ? interviewPromptCount : interviewRecords.filter((record) => record.focuses.includes(item)).reduce((total, record) => total + record.prompts.length, 0)}</b></button>)}</div>
           <div className="interview-boundary"><span>怎么使用</span><p>先尝试回答卡片里的改写问题，再打开原帖补上下文。不要根据一条经历推断 HC、难度或公司统一偏好。</p></div>
         </aside>
 
         <div className="interview-results">
+          <section className="real-question-index" id="real-questions">
+            <div className="real-question-index-head"><div><span>REAL QUESTION INDEX</span><h2>先刷真题，再回到完整面经理解上下文。</h2></div><p><strong>{filteredQuestions.length}</strong> 道匹配问题 · 经过摘要与改写</p></div>
+            {visibleQuestions.length > 0 ? <div className="real-question-grid">{visibleQuestions.map(({ record, prompt, promptIndex }, index) => (
+              <article className="real-question-card" key={`${record.id}-${promptIndex}`}>
+                <div><span>Q{String(index + 1).padStart(2, '0')}</span><span>{record.company}</span><span>{record.published}</span></div>
+                <small>{record.role} · {record.focuses.join(' / ')}</small>
+                <h3>{prompt}</h3>
+                <div><a href={sitePath(`/interviews/${record.id}/`)}>查看面经上下文 →</a><a href={record.sourceHref} target="_blank" rel="noreferrer">原帖 ↗</a></div>
+              </article>
+            ))}</div> : <div className="interview-empty"><strong>没有匹配的真题</strong><p>减少筛选条件，或搜索 RAG、Agent、量化、多模态等主题。</p></div>}
+            {filteredQuestions.length > 12 && <button className="real-question-more" type="button" onClick={() => setShowAllQuestions((visible) => !visible)}>{showAllQuestions ? '收起真题' : `展开全部 ${filteredQuestions.length} 道真题`} <span>{showAllQuestions ? '↑' : '↓'}</span></button>}
+          </section>
+
           <div className="interview-results-head"><span>{filteredRecords.length.toString().padStart(2, '0')} REPORTS</span><span>公开个人复盘 · 非官方题库</span></div>
           <div className="interview-records">
             {filteredRecords.map((record, index) => (

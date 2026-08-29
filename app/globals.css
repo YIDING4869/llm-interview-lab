@@ -648,6 +648,25 @@ main {
 .interview-boundary { padding: 20px; color: white; background: var(--ink); }
 .interview-boundary span { color: var(--acid); font: 800 11px/1 ui-monospace, monospace; }
 .interview-boundary p { margin: 11px 0 0; color: #c9d0df; font-size: 10px; line-height: 1.7; }
+.real-question-index { margin-bottom: 54px; }
+.real-question-index-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: end; margin-bottom: 20px; }
+.real-question-index-head span { color: var(--blue); font: 800 11px/1 ui-monospace, monospace; letter-spacing: .08em; }
+.real-question-index-head h2 { max-width: 560px; margin: 12px 0 0; font-size: clamp(25px, 3vw, 36px); line-height: 1.13; letter-spacing: -.042em; }
+.real-question-index-head p { margin: 0; color: #7f899c; font: 750 11px/1.55 ui-monospace, monospace; text-align: right; }
+.real-question-index-head p strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 26px; }
+.real-question-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.real-question-card { min-height: 258px; display: flex; flex-direction: column; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: 0 9px 28px rgba(17,26,53,.035); }
+.real-question-card > div:first-child { display: flex; gap: 11px; align-items: center; color: #969eae; font: 800 9px/1 ui-monospace, monospace; letter-spacing: .05em; }
+.real-question-card > div:first-child span:first-child { margin-right: auto; color: var(--blue); }
+.real-question-card small { margin-top: 19px; color: #747e91; font-size: 10px; font-weight: 750; line-height: 1.5; }
+.real-question-card h3 { margin: 13px 0 24px; font-size: 16px; line-height: 1.55; letter-spacing: -.018em; }
+.real-question-card > div:last-child { display: flex; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 15px; border-top: 1px solid #eceef2; }
+.real-question-card a { color: #667188; font-size: 10px; font-weight: 800; }
+.real-question-card a:first-child { color: var(--blue); }
+.real-question-card a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.real-question-more { width: 100%; min-height: 50px; display: flex; justify-content: center; gap: 12px; align-items: center; margin-top: 10px; border: 1px solid #cbd1dd; border-radius: 9px; color: #536078; background: #fafaf8; font-size: 11px; font-weight: 800; cursor: pointer; }
+.real-question-more:hover { border-color: var(--blue); color: var(--blue); background: #eef1ff; }
+.real-question-more span { color: var(--blue); font-size: 14px; }
 .interview-results-head { display: flex; justify-content: space-between; padding: 0 2px 16px; color: #7f899c; font: 800 11px/1 ui-monospace, monospace; letter-spacing: .08em; }
 .interview-records { display: grid; gap: 18px; }
 .interview-record { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: white; box-shadow: 0 12px 36px rgba(17,26,53,.04); }
@@ -1849,6 +1868,8 @@ footer > a { justify-self: end; font-size: 11px; font-weight: 750; }
   .interview-library { grid-template-columns: 240px minmax(0, 1fr); gap: 24px; }
   .interview-record > header { grid-template-columns: 82px 1fr; }
   .interview-record-date { grid-column: 2; text-align: left; }
+  .real-question-grid { grid-template-columns: 1fr; }
+  .real-question-card { min-height: 225px; }
 }
 
 @media (max-width: 800px) {
@@ -1877,7 +1898,12 @@ footer > a { justify-self: end; font-size: 11px; font-weight: 750; }
   .interview-patterns, .interview-library { width: calc(100% - 36px); }
   .interview-patterns { margin-top: -20px; }
   .interview-library { padding-top: 48px; }
+  .real-question-index-head { grid-template-columns: 1fr; gap: 12px; }
+  .real-question-index-head p { text-align: left; }
+  .real-question-index-head p strong { display: inline; margin: 0 6px 0 0; font-size: 18px; }
   .interview-results-head { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .real-question-card { min-height: 0; padding: 18px; }
+  .real-question-card > div:last-child { align-items: flex-start; flex-direction: column; }
   .interview-record > header { grid-template-columns: 1fr; gap: 18px; padding: 22px 18px; }
   .interview-record-date { grid-column: 1; }
   .interview-record-meta { grid-template-columns: 1fr; }

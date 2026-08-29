@@ -17,7 +17,7 @@
 - 带答案结构和追问的精选面试题
 - Shape、梯度、Tokenizer、Attention、完整 Transformer Forward、Sampling、KV Cache 与 RAG 八项可视化实验
 - 可统一导出、备份和恢复课程进度、模块作答与全部 Notes
-- 可追溯来源的国内大模型、Agent、多模态与工程岗位面经摘要
+- 13 份可追溯公开面试流程与 52 道改写真题，覆盖大模型、Agent、多模态与 AI Infra 岗位
 - 响应式布局和 PWA manifest
 
 ## 信息架构
@@ -30,7 +30,7 @@
 - `/questions/[questionId]/`：可分享、可搜索的独立题目与答案结构
 - `/practice/`：模块学习闭环、路线进度、检查题、动手任务和 Notes
 - `/progress/`：汇总当前设备的课程、作答、模块闭环与最近学习记录
-- `/interviews/`：国内真实面经摘要、来源边界与岗位追问模式
+- `/interviews/`：可搜索、按方向筛选的真题索引，以及国内公开面经摘要、来源边界与岗位追问模式
 - `/interviews/[recordId]/`：保留来源、流程和结论边界的独立面经页
 - `/labs/`：八项可调节的机制与系统实验
 - `/resources/`：可筛选的学习资料与每份资料对应的建议产物
