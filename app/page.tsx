@@ -301,7 +301,7 @@ export default function Home() {
       <section className="interview-preview-section section">
         <div className="section-head">
           <div><p className="section-kicker">03 / REAL INTERVIEW REPORTS</p><h2>看看国内岗位，真的会怎样连续追问。</h2></div>
-          <div className="resource-head-action"><p>13 份公开流程整理出 52 道可筛选真题，并提供五套 12 分钟整场模拟；答案与复盘只保存在当前设备。</p><a href={sitePath('/mock/')}>开始一场模拟面试 →</a></div>
+          <div className="resource-head-action"><p>13 份公开流程整理出 52 道可筛选真题，并提供五个岗位方向、十五套轮换组合；答案与复盘只保存在当前设备。</p><a href={sitePath('/mock/')}>开始一场模拟面试 →</a></div>
         </div>
         <div className="interview-preview-grid">
           {interviewRecords.slice(0, 3).map((record, index) => (

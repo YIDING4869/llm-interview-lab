@@ -13,6 +13,7 @@ export type MockSessionStage = 'main' | 'followup' | 'report';
 export type MockSession = {
   id: string;
   trackId: string;
+  variantIndex?: number;
   startedAt: string;
   currentIndex: number;
   stage: MockSessionStage;
@@ -22,6 +23,7 @@ export type MockSession = {
 export type MockReport = {
   id: string;
   trackId: string;
+  variantIndex?: number;
   completedAt: string;
   mainCompleted: number;
   followupsCompleted: number;
