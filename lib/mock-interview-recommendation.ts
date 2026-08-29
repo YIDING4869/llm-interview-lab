@@ -10,6 +10,14 @@ export type MockInterviewRecommendation = {
   nextRule: string;
 };
 
+export type MockInterviewSelfReviewTrend = {
+  reports: MockReport[];
+  totalMainCompleted: number;
+  rubricRates: number[];
+  weakestRubricIndex: number;
+  weakestRubricTitle: string;
+};
+
 const recommendationRecipes = [
   {
     title: '先练“两句给结论”',
@@ -52,4 +60,24 @@ export function recommendationForMockReport(report: MockReport): MockInterviewRe
   const rubricIndex = report.rubricCounts.reduce((lowest, count, index, counts) => count < counts[lowest] ? index : lowest, 0);
   const recipe = recommendationRecipes[rubricIndex];
   return { rubricIndex, rubricTitle: interviewAnswerRubric[rubricIndex].title, ...recipe };
+}
+
+export function mockRubricRate(report: MockReport, rubricIndex: number) {
+  return report.mainCompleted > 0 ? Math.round(((report.rubricCounts[rubricIndex] ?? 0) / report.mainCompleted) * 100) : 0;
+}
+
+export function selfReviewTrendForMockReports(reports: MockReport[], limit = 3): MockInterviewSelfReviewTrend {
+  const recentReports = reports.filter((report) => report.mainCompleted > 0).slice(-limit);
+  const totalMainCompleted = recentReports.reduce((total, report) => total + report.mainCompleted, 0);
+  const rubricRates = interviewAnswerRubric.map((_, rubricIndex) => totalMainCompleted > 0
+    ? Math.round((recentReports.reduce((total, report) => total + (report.rubricCounts[rubricIndex] ?? 0), 0) / totalMainCompleted) * 100)
+    : 0);
+  const weakestRubricIndex = rubricRates.reduce((lowest, rate, index, rates) => rate < rates[lowest] ? index : lowest, 0);
+  return {
+    reports: recentReports,
+    totalMainCompleted,
+    rubricRates,
+    weakestRubricIndex,
+    weakestRubricTitle: interviewAnswerRubric[weakestRubricIndex].title,
+  };
 }

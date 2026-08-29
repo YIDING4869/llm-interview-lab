@@ -9,9 +9,9 @@ import { interviewRecords } from '../../data/interviews';
 import { foundationLessons, lessonsForModule } from '../../data/lessons';
 import { mockInterviewTracks } from '../../data/mock-interviews';
 import { practiceQuestions } from '../../data/practice';
-import { interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
+import { interviewAnswerRubric, interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
 import { readLastLearningActivity } from '../../lib/learning-activity';
-import { recommendationForMockReport } from '../../lib/mock-interview-recommendation';
+import { recommendationForMockReport, selfReviewTrendForMockReports } from '../../lib/mock-interview-recommendation';
 import { emptyMockInterviewStorage, mockInterviewStorageKey, type MockInterviewStorage } from '../../lib/mock-interview';
 import { sitePath } from '../../lib/site-path';
 
@@ -57,6 +57,13 @@ type RecentAttempt = {
   href: string;
 };
 
+type MockTrendSummary = {
+  trackTitle: string;
+  reportCount: number;
+  weakestTitle: string;
+  rubricRates: number[];
+};
+
 const eventDefinitions = [
   { id: 'site_enter', label: '进入站点' },
   { id: 'practice_start', label: '开始题目' },
@@ -92,6 +99,7 @@ export function ProgressDashboard() {
   const [summary, setSummary] = useState<ProgressSummary>(emptySummary);
   const [moduleRows, setModuleRows] = useState<ModuleProgressRow[]>([]);
   const [recentAttempts, setRecentAttempts] = useState<RecentAttempt[]>([]);
+  const [mockTrend, setMockTrend] = useState<MockTrendSummary | null>(null);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [hydrated, setHydrated] = useState(false);
 
@@ -112,6 +120,9 @@ export function ProgressDashboard() {
     const interviewAttempts = Object.values(interviewPractice).reduce((total, item) => total + (item.attempts?.length ?? 0), 0);
     const followupAttempts = Object.values(interviewPractice).reduce((total, item) => total + Object.values(item.followups ?? {}).reduce((count, followup) => count + (followup.attempts?.length ?? 0), 0), 0);
     const interviewQuestions = Object.values(interviewPractice).filter((item) => (item.attempts?.length ?? 0) > 0).length;
+    const latestMockReport = [...mockInterview.reports].reverse().find((report) => report.mainCompleted > 0);
+    const latestMockTrack = mockInterviewTracks.find((track) => track.id === latestMockReport?.trackId);
+    const latestMockTrend = latestMockTrack ? selfReviewTrendForMockReports(mockInterview.reports.filter((report) => report.trackId === latestMockTrack.id)) : null;
 
     const nextModuleRows = knowledgeModules.map((module) => {
       const item = practice[module.id];
@@ -231,6 +242,7 @@ export function ProgressDashboard() {
       });
       setModuleRows(nextModuleRows);
       setRecentAttempts(nextRecentAttempts.slice(0, 5));
+      setMockTrend(latestMockTrack && latestMockTrend ? { trackTitle: latestMockTrack.title, reportCount: latestMockTrend.reports.length, weakestTitle: latestMockTrend.weakestRubricTitle, rubricRates: latestMockTrend.rubricRates } : null);
       setEventCounts(nextEventCounts);
       setHydrated(true);
     });
@@ -275,6 +287,8 @@ export function ProgressDashboard() {
               <div><span>RECENT ANSWERS</span><strong>最近保存的作答</strong></div>
               {recentAttempts.length > 0 ? <ol>{recentAttempts.map((attempt, index) => <li key={attempt.id}><span>{String(index + 1).padStart(2, '0')}</span><div><small>{attempt.context} · {new Date(attempt.savedAt).toLocaleDateString('zh-CN')}</small><a href={sitePath(attempt.href)}>{attempt.title}</a></div></li>)}</ol> : <div className="progress-no-attempts"><strong>还没有保存作答</strong><p>选择一道结构题或面经真题，先留下第一版答案，下一次才能比较进步。</p><a href={sitePath('/interviews/#real-questions')}>去面经真题开始第一题 →</a></div>}
             </section>
+
+            {mockTrend && <section className="progress-mock-trend"><div><span>MOCK SELF-REVIEW TREND</span><strong>最近 {mockTrend.reportCount} 场模拟</strong></div><p><b>{mockTrend.trackTitle}</b>中，按已完成主答归一化后，“{mockTrend.weakestTitle}”是最近勾选最少的一项。</p><dl>{interviewAnswerRubric.map((rubric, index) => <div key={rubric.title}><dt>{rubric.title}</dt><dd>{mockTrend.rubricRates[index]}%</dd><i><b style={{ width: `${mockTrend.rubricRates[index]}%` }} /></i></div>)}</dl><a href={sitePath('/mock/')}>查看趋势与下一场处方 →</a></section>}
 
             <section className="progress-event-panel">
               <div><span>LOCAL EXPERIENCE EVENTS</span><strong>本机体验轨迹</strong></div>
