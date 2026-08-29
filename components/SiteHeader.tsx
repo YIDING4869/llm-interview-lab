@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { sitePath } from '../lib/site-path';
 
 type SiteHeaderProps = {
-  active?: 'home' | 'learn' | 'lessons' | 'practice' | 'interviews' | 'labs' | 'resources';
+  active?: 'home' | 'learn' | 'lessons' | 'practice' | 'questions' | 'interviews' | 'labs' | 'resources';
 };
 
 export function SiteHeader({ active = 'home' }: SiteHeaderProps) {

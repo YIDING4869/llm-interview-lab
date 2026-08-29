@@ -3,15 +3,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
-import { entryRoutes } from '../data/curriculum';
+import { entryRoutes, knowledgeModules } from '../data/curriculum';
 import { interviewRecords } from '../data/interviews';
 import { foundationLessons } from '../data/lessons';
 import { practiceCategories, practiceQuestions } from '../data/practice';
 import { sitePath } from '../lib/site-path';
 
 const roadmaps = [
-  { index: '01', title: '基础与 Transformer', detail: 'Tokenizer、Attention、RoPE、归一化与训练目标', count: '16 topics', tone: 'blue' },
-  { index: '02', title: '后训练与对齐', detail: 'SFT、Reward Model、RLHF、DPO 与 GRPO', count: '12 topics', tone: 'lime' },
+  { index: '01', title: '基础、Transformer 与多模态', detail: 'Tokenizer、Attention、RoPE、视觉 token 与跨模态融合', count: '22 topics', tone: 'blue' },
+  { index: '02', title: '后训练、对齐与推理模型', detail: 'SFT、Reward Model、RLHF、GRPO 与 Thinking Budget', count: '17 topics', tone: 'lime' },
   { index: '03', title: 'RAG 与 Agent', detail: '检索、重排、工具调用、记忆与 Agent 评测', count: '14 topics', tone: 'violet' },
   { index: '04', title: '推理与系统', detail: 'KV Cache、量化、并行、批处理与服务架构', count: '15 topics', tone: 'orange' },
   { index: '05', title: '评测与可靠性', detail: 'LLM-as-a-Judge、偏差、幻觉、安全与 badcase', count: '11 topics', tone: 'cyan' },
@@ -120,13 +120,13 @@ export default function Home() {
           </p>
           <div className="hero-actions">
             <a className="primary-button" href={sitePath('/practice/?module=transformer&quickstart=1')}>3 分钟开始体验 <span>→</span></a>
-            <a className="text-button" href={sitePath(`/lessons/?lesson=${foundationLessons[0].id}`)}>零基础从第一课开始 <span>↗</span></a>
+            <a className="text-button" href={sitePath(`/lessons/${foundationLessons[0].id}/`)}>零基础从第一课开始 <span>↗</span></a>
           </div>
           <p className="quickstart-caption">无需注册 · 30 秒作答 · 对照答案结构 · 打开可视化实验</p>
           <dl className="hero-stats">
             <div><dt>03</dt><dd>背景入口</dd></div>
             <div><dt>{foundationLessons.length}</dt><dd>站内基础课</dd></div>
-            <div><dt>14</dt><dd>知识模块</dd></div>
+            <div><dt>{knowledgeModules.length}</dt><dd>知识模块</dd></div>
           </dl>
         </div>
 
@@ -212,7 +212,7 @@ export default function Home() {
               <h4>必答点</h4>
               <ul>{selectedQuestion.points.map((point) => <li key={point}>{point}</li>)}</ul>
               <div className="followup-box"><span>FOLLOW-UP</span><p>{selectedQuestion.followup}</p></div>
-              <a className="answer-module-link" href={sitePath(`/practice/?module=${selectedQuestion.moduleId}&question=${selectedQuestion.id}`)}>进入对应题目训练 <span>→</span></a>
+              <div className="answer-panel-links"><a className="answer-module-link" href={sitePath(`/practice/?module=${selectedQuestion.moduleId}&question=${selectedQuestion.id}`)}>进入对应题目训练 <span>→</span></a><a href={sitePath(`/questions/${selectedQuestion.id}/`)}>打开独立题目页 ↗</a></div>
             </article>
           </div>
         </div>

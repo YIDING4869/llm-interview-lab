@@ -119,7 +119,7 @@ export function LessonWorkspace() {
 
         <article className="lesson-reader">
           <header className="lesson-reader-head">
-            <div className="lesson-reader-meta"><span>LESSON {activeLesson.order}</span><span>{activeModule.title}</span><span>{activeLesson.duration}</span><span>{activeLesson.level}</span></div>
+            <div className="lesson-reader-meta"><span>LESSON {activeLesson.order}</span><span>{activeModule.title}</span><span>{activeLesson.duration}</span><span>{activeLesson.level}</span><a href={sitePath(`/lessons/${activeLesson.id}/`)}>独立课程页 ↗</a></div>
             <p className="lesson-eyebrow">{activeLesson.eyebrow}</p>
             <h2>{activeLesson.title}</h2>
             <p className="lesson-summary">{activeLesson.summary}</p>

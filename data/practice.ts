@@ -1,7 +1,7 @@
 export type PracticeQuestion = {
   id: number;
   moduleId: string;
-  category: '基础能力' | '模型原理' | '训练与对齐' | '推理系统' | 'RAG / Agent' | '评测与研究' | '项目深挖';
+  category: '基础能力' | '模型原理' | '多模态' | '训练与对齐' | '推理系统' | 'RAG / Agent' | '评测与研究' | '项目深挖';
   difficulty: '基础' | '进阶' | '系统设计';
   time: string;
   title: string;
@@ -20,7 +20,7 @@ export type PracticeQuestion = {
   labHref?: string;
 };
 
-export const practiceCategories = ['全部', '基础能力', '模型原理', '训练与对齐', '推理系统', 'RAG / Agent', '评测与研究', '项目深挖'] as const;
+export const practiceCategories = ['全部', '基础能力', '模型原理', '多模态', '训练与对齐', '推理系统', 'RAG / Agent', '评测与研究', '项目深挖'] as const;
 
 export const practiceQuestions: PracticeQuestion[] = [
   {
@@ -362,5 +362,35 @@ export const practiceQuestions: PracticeQuestion[] = [
     task: { title: '离线到线上指标契约', brief: '为一个 LLM 功能写出离线指标、线上主指标和守护指标。', steps: ['列出每个指标对应的用户价值', '定义关键用户与任务切片', '写出上线、停止和回滚条件'], evidence: '指标映射表、切片计划和明确的决策门槛。' },
     notePrompt: '我能否说明离线分数通过什么机制影响真实用户，而不是默认二者相等？',
     resourceIds: ['fsdl', 'ml-systems'],
+  },
+  {
+    id: 23,
+    moduleId: 'multimodal',
+    category: '多模态',
+    difficulty: '进阶',
+    time: '90 秒',
+    title: '一张图片怎样被送进语言模型？多模态错误应该如何分层定位？',
+    hint: '沿 pixels、patches、vision encoder、projector 和 language tokens 回答。',
+    answer: '图片先被切成 patch 并映射为视觉 token，经 ViT 等视觉编码器混合空间信息，再由 projector、resampler 或 cross-attention 连接到语言模型 hidden space。错误应至少分为视觉感知、跨模态对齐、语言生成和工具执行；提高分辨率只可能改善其中部分感知错误，还会增加视觉 token 与计算。',
+    points: ['解释 patch embedding 与视觉编码器', '说明视觉表示怎样接入 LLM', '区分感知、对齐、生成和执行错误', '连接分辨率、视觉 token、上下文和成本'],
+    followup: '文档图片 OCR 正确，但模型仍回答错了，你会保存哪些中间证据继续定位？',
+    task: { title: '多模态错误切片', brief: '用一个开源 VLM 测试小字 OCR、空间定位和图表问答。', steps: ['固定三类图片与问题', '改变分辨率或裁剪策略并记录 token/延迟', '按感知、对齐、生成标注错误'], evidence: '输入样本、配置、逐样本输出和错误分层表。' },
+    notePrompt: '我能否指出图片信息在哪一步丢失，而不是把所有问题都叫作视觉幻觉？',
+    resourceIds: ['qwen25-vl'],
+  },
+  {
+    id: 24,
+    moduleId: 'reasoning',
+    category: '训练与对齐',
+    difficulty: '系统设计',
+    time: '90 秒',
+    title: '怎样证明 Thinking Budget 带来的是有效推理，而不只是更长输出和更高采样成本？',
+    hint: '固定模型与任务，画质量—token—延迟曲线，并检查预算匹配基线。',
+    answer: '应在冻结任务集上控制模型、解码和总采样预算，比较多个 thinking budget 下的准确率、token、延迟与失败类型；加入 non-thinking、同 token 多次采样或 best-of-n 等预算匹配基线。若收益只来自更多独立尝试、长度线索或少数可污染题目，就不能归因于更好的内部推理。',
+    points: ['冻结任务与解码设置', '联合报告质量、token、延迟和成本', '加入同预算采样或 non-thinking 基线', '检查长度泄漏、污染与分任务收益'],
+    followup: '预算增加后准确率先升后降，可能有哪些原因，产品上怎样选择 operating point？',
+    task: { title: '推理预算曲线', brief: '在可自动验证的小型数学或代码任务上比较三档推理预算。', steps: ['固定题目、模型和判分器', '记录正确率、平均 token、P95 延迟和重复率', '加入一个总 token 匹配的多次采样基线'], evidence: '预算曲线、逐题结果和明确的使用/停止条件。' },
+    notePrompt: '我的“推理提升”结论是否排除了更多 token、更多采样和评测泄漏这些替代解释？',
+    resourceIds: ['deepseek-r1', 'qwen3'],
   },
 ];

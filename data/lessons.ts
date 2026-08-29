@@ -171,6 +171,18 @@ export const foundationLessons: FoundationLesson[] = [
     takeaways: ['Embedding 把 ids 变成 hidden states', 'Attention 跨位置通信，FFN 逐位置变换', 'LM head 把 hidden states 投影为词表 logits'], labHref: '/labs/?lab=transformer',
   },
   {
+    id: 'multimodal-token-flow', moduleId: 'multimodal', order: '04A.1', title: '一张图片怎样进入视觉语言模型', eyebrow: 'PIXELS → PATCHES → TOKENS', duration: '30 分钟', level: '基础',
+    summary: '沿像素、视觉 token、投影层和语言 token，理解一次多模态输入的完整信息流与失败边界。',
+    goals: ['解释 ViT 如何把图片变成 patch tokens', '比较 projector 与 cross-attention 融合', '把错误分成感知、对齐和生成三层'],
+    sections: [
+      { title: '先把图片变成视觉 token', lead: 'Vision Transformer 把图片切成 patch，再把每个 patch 映射成向量。', formula: { label: 'PATCH SEQUENCE', expression: 'image [H, W, C] → patches [N, P²C] → visual tokens [N, Dᵥ]', explanation: '固定 patch 大小时，分辨率越高，patch 数 N 越多。动态分辨率模型会保留不同尺寸或长宽比，但视觉 token 数和计算也随之变化。' }, bullets: ['Patch embedding 类似把局部像素块变成 token', '视觉编码器使用 self-attention 混合空间信息', '位置编码告诉模型 patch 的空间顺序', '视频还要表达帧顺序和时间位置'] },
+      { title: '视觉表示要接入语言模型空间', lead: '视觉编码器的输出维度和分布通常与语言模型 hidden states 不同。', bullets: ['Projector 把视觉 token 映射到语言模型 hidden size', '早期融合把视觉和文本 token 放进同一序列', 'Cross-attention 让文本状态按需读取视觉状态', '压缩或重采样视觉 token 可以降成本，但可能丢失小字和细节'], callout: '“模型看到了图片”并不意味着每个细节都被保留。分辨率、patch、压缩和上下文预算共同决定可用视觉证据。' },
+      { title: '多模态错误要分层定位', lead: '最终答案错误可能发生在视觉感知、跨模态对齐或语言生成。', bullets: ['感知：OCR、物体、位置或时间事件识别错误', '对齐：识别到了元素，但没有连接到问题中的指代', '生成：证据已经进入表示，却引用错误或产生无依据结论', '工具：视觉 Agent 看对了界面，但点击坐标或状态更新错误'], callout: '评测时保存原图、裁剪、视觉 token 预算、问题、答案和 grounding；不要把所有错误都叫作 hallucination。' },
+    ],
+    checkpoint: { question: '提高输入图片分辨率为什么不保证答案一定更好？', hint: '更多像素也会带来更多视觉 token、压缩与噪声。', options: ['高分辨率会删除文本 prompt', '视觉 token 预算、压缩和任务信息密度仍有限', '分辨率只影响音频模型', '更高分辨率一定降低计算量'], correctIndex: 1, answer: '更高分辨率可能保留小字和细节，但也增加视觉 token 与计算，模型可能继续压缩或截断；若错误来自对齐或生成，增加像素也不会修复。需要按错误切片验证收益。' },
+    takeaways: ['图片通过 patch 与视觉编码器变成视觉 token', '融合层连接视觉空间与语言模型 hidden space', '多模态评测要区分感知、对齐、生成和工具执行'], resourceIds: ['qwen25-vl'],
+  },
+  {
     id: 'pretraining-data-scaling', moduleId: 'pretraining', order: '05.1', title: '预训练数据、计算预算与 Scaling', eyebrow: 'DATA × MODEL × COMPUTE', duration: '30 分钟', level: '基础',
     summary: '把数据质量、训练 token、模型规模与计算预算放进同一个可验证的训练计划。',
     goals: ['解释预训练数据管线的主要阶段', '区分参数规模、训练 token 与计算预算', '为正式训练设计小规模 pilot 和停止条件'],
@@ -205,6 +217,18 @@ export const foundationLessons: FoundationLesson[] = [
     ],
     checkpoint: { question: 'DPO 不训练显式 Reward Model，是否意味着不再受偏好数据偏差影响？', hint: '训练目标仍然直接来自偏好对。', options: ['是，DPO 自动消除全部偏差', '否，偏好对、参考模型和 β 仍决定优化方向', '是，因为 DPO 不使用梯度', '否，但只影响推理速度'], correctIndex: 1, answer: '不会。DPO 省去了显式 Reward Model 和在线 PPO 流程，但训练信号仍来自偏好对，并受参考模型、β、数据覆盖和标注偏差影响。' },
     takeaways: ['偏好数据决定被奖励的行为', 'PPO、DPO、GRPO 的数据流与更新方式不同', '后训练必须检查奖励捷径和能力退化'],
+  },
+  {
+    id: 'reasoning-training-budget', moduleId: 'reasoning', order: '07A.1', title: '推理模型：训练信号与 Thinking Budget', eyebrow: 'VERIFY → OPTIMIZE → SPEND', duration: '35 分钟', level: '基础',
+    summary: '区分推理能力怎样在训练中获得、怎样被蒸馏，以及推理时增加 token 预算究竟在交换什么。',
+    goals: ['解释可验证奖励为何适合数学与代码', '区分 cold-start、RL 与蒸馏', '用质量—成本曲线评测 thinking budget'],
+    sections: [
+      { title: '可验证任务给 RL 更明确的反馈', lead: '数学答案、代码测试和形式化证明常能自动判断结果，因此可以对同一问题采样多条轨迹并给出奖励。', bullets: ['奖励可以来自最终答案、单元测试或规则检查器', '只奖励最终结果可能产生格式捷径或偶然命中', '过程奖励需要可靠的步骤标签或 verifier', '组内采样的多样性决定相对优势是否有信号'], callout: '奖励“可验证”不等于奖励“完美”。测试覆盖不足、答案格式和数据污染仍会制造高奖励错误。' },
+      { title: 'R1-Zero、R1 与蒸馏回答不同问题', lead: '纯 RL 可以探索行为，但可读性与稳定性仍可能需要数据和多阶段训练。', bullets: ['Pure RL：观察能力能否从奖励与探索中出现', 'Cold start：用少量高质量轨迹建立格式、语言和可读性', '多阶段训练：在推理专项与通用能力间校准', '蒸馏：把强模型生成的轨迹转为小模型监督数据'], callout: '蒸馏模型学到强轨迹分布，不等于复制了教师的内部推理机制；评测仍要覆盖分布外任务与错误模式。' },
+      { title: 'Thinking budget 是质量与成本的控制面', lead: '给模型更多生成 token，可能增加搜索与自我修正机会，也可能带来重复、跑偏和更高延迟。', formula: { label: 'TASK UTILITY', expression: 'utility(budget) = task quality − λ · token cost − μ · latency', explanation: 'λ 和 μ 来自产品约束。应在同一任务集上画预算曲线，检查准确率、token、延迟与失败类型，而不是默认更长更好。' }, bullets: ['报告准确率随 token budget 的变化', '记录 early stop、重复和超长失败', '把 thinking 与 non-thinking 模式放在同一成本约束下比较', 'CoT 文本可用于诊断，但不自动是忠实内部原因'] },
+    ],
+    checkpoint: { question: '一个推理模型平均输出 token 翻倍、准确率提升 2%，能否直接说明推理更有效？', hint: '先比较预算匹配、任务切片和失败类型。', options: ['能，输出越长推理越强', '不能；要看质量—成本曲线、预算匹配和错误切片', '能，只要使用 RL', '不能，因为推理模型永远无效'], correctIndex: 1, answer: '不能直接说明。需要在统一任务和预算下比较准确率、token、延迟与失败类型，并检查收益是否只来自少数切片、更多采样或长度捷径。' },
+    takeaways: ['可验证奖励适合结果能够自动检查的任务', 'Cold start、RL、多阶段训练和蒸馏承担不同作用', 'Thinking budget 必须用任务质量、token 与延迟联合校准'], resourceIds: ['deepseek-r1', 'qwen3'],
   },
   {
     id: 'serving-prefill-decode', moduleId: 'inference', order: '08.1', title: 'Prefill、Decode 与大模型服务', eyebrow: 'LATENCY × THROUGHPUT × MEMORY', duration: '30 分钟', level: '基础',

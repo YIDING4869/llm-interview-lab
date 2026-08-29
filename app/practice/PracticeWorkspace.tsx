@@ -445,7 +445,7 @@ export function PracticeWorkspace() {
               <div><span>核心概念</span><ul>{activeModule.concepts.map((concept) => <li key={concept}>{concept}</li>)}</ul></div>
               <div><span>完成产物</span><p>{activeModule.output}</p></div>
             </div>
-            <div className="loop-panel-actions">{moduleLessons[0] && <a href={sitePath(`/lessons/?lesson=${moduleLessons[0].id}`)}>先学习 {moduleLessons.length} 节站内基础课 →</a>}<a href={sitePath(`/learn/#module-${activeModule.id}`)}>查看知识树中的模块 →</a>{moduleResources.map((resource) => <a href={resource.href} target="_blank" rel="noreferrer" key={resource.id}>{resource.title} ↗</a>)}</div>
+            <div className="loop-panel-actions">{moduleLessons[0] && <a href={sitePath(`/lessons/${moduleLessons[0].id}/`)}>先学习 {moduleLessons.length} 节站内基础课 →</a>}<a href={sitePath(`/learn/#module-${activeModule.id}`)}>查看知识树中的模块 →</a>{moduleResources.map((resource) => <a href={resource.href} target="_blank" rel="noreferrer" key={resource.id}>{resource.title} ↗</a>)}</div>
           </section>
 
           <section className="loop-panel answer-practice-panel" id="answer">
@@ -464,7 +464,7 @@ export function PracticeWorkspace() {
             {attempts.length > 0 && <details className="attempt-history"><summary>查看历史作答 · {attempts.length} 次 <span>＋</span></summary><ol>{[...attempts].reverse().map((attempt, index) => <li key={`${attempt.savedAt}-${index}`}><span>{new Date(attempt.savedAt).toLocaleString('zh-CN')}</span><p>{attempt.answer}</p></li>)}</ol></details>}
             <details className="answer-reveal" {...(quickstart && attempts.length > 0 ? { open: true } : {})}><summary>完成限时作答后，查看答案结构 <span>＋</span></summary><div><p>{question.answer}</p><strong>必答点 · 点击完成自评</strong><ul className="answer-rubric">{question.points.map((point, index) => <li key={point}><button type="button" className={rubric[index] ? 'checked' : ''} aria-pressed={Boolean(rubric[index])} onClick={() => toggleRubric(index)}><span>{rubric[index] ? '✓' : String(index + 1).padStart(2, '0')}</span>{point}</button></li>)}</ul><aside><span>FOLLOW-UP</span><p>{question.followup}</p></aside></div></details>
             {quickstart && attempts.length > 0 && question.labHref && <div className="quickstart-next-actions"><a className="quickstart-lab-link" href={sitePath(question.labHref)}>02 · 打开 Attention 可视化实验 <span>→</span></a><a href={sitePath(`/practice/?module=${activeModule.id}`)}>继续完整 Transformer 学习闭环 ↗</a></div>}
-            <div className="loop-panel-actions"><a href={sitePath(`/?question=${question.id}#question-bank`)}>在完整题库中打开 Q{question.id.toString().padStart(2, '0')} →</a></div>
+            <div className="loop-panel-actions"><a href={sitePath(`/questions/${question.id}/`)}>打开 Q{question.id.toString().padStart(2, '0')} 独立题目页 →</a></div>
           </section>
 
           <section className="loop-panel build-panel">

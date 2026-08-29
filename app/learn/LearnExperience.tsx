@@ -61,7 +61,7 @@ export function LearnExperience() {
           </div>
           <div className="knowledge-hero-aside">
             <p>先判断自己从哪里开始，再沿着“基础 → 模型 → 训练 → 应用 → 系统与研究”推进。每一阶段都必须产出能运行、能解释、能复盘的作品。</p>
-            <dl><div><dt>03</dt><dd>学习入口</dd></div><div><dt>14</dt><dd>知识模块</dd></div><div><dt>05</dt><dd>能力层级</dd></div></dl>
+            <dl><div><dt>03</dt><dd>学习入口</dd></div><div><dt>{knowledgeModules.length}</dt><dd>知识模块</dd></div><div><dt>05</dt><dd>能力层级</dd></div></dl>
           </div>
         </div>
       </section>
@@ -133,7 +133,7 @@ export function LearnExperience() {
                   <div><span>学习产物</span><p>{module.output}</p></div>
                   <div><span>面试能力</span><p>{module.interview}</p></div>
                 </div>
-                {moduleLessons.length > 0 && <div className="module-lesson-list"><div><span>站内基础课</span><strong>{moduleLessons.length} lessons</strong></div><div>{moduleLessons.map((lesson) => <a href={sitePath(`/lessons/?lesson=${lesson.id}`)} key={lesson.id}><span>{lesson.order}</span><strong>{lesson.title}</strong><small>{lesson.duration} →</small></a>)}</div></div>}
+                {moduleLessons.length > 0 && <div className="module-lesson-list"><div><span>站内基础课</span><strong>{moduleLessons.length} lessons</strong></div><div>{moduleLessons.map((lesson) => <a href={sitePath(`/lessons/${lesson.id}/`)} key={lesson.id}><span>{lesson.order}</span><strong>{lesson.title}</strong><small>{lesson.duration} →</small></a>)}</div></div>}
                 <a className="module-practice-link" href={sitePath(`/practice/?module=${module.id}`)}><span>{completedActions === 4 ? '本模块闭环已完成' : `还需完成 ${4 - completedActions} 个学习动作`}</span><strong>进入模块学习闭环 →</strong></a>
               </details>
             );

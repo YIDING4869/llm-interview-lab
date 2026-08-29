@@ -67,6 +67,7 @@ export function InterviewLibrary() {
                   </div>
                 </details>
                 <div className="interview-record-actions">
+                  <a href={sitePath(`/interviews/${record.id}/`)}>打开独立面经页 <span>→</span></a>
                   <a href={record.sourceHref} target="_blank" rel="noreferrer">打开原始面经 <span>↗</span></a>
                   <a href={sitePath(record.practiceHref)}>进入对应学习闭环 <span>→</span></a>
                   {record.labHref && <a href={sitePath(record.labHref)}>打开关联实验 <span>→</span></a>}
