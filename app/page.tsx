@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
 import { entryRoutes } from '../data/curriculum';
 import { interviewRecords } from '../data/interviews';
 import { foundationLessons } from '../data/lessons';
 import { practiceCategories, practiceQuestions } from '../data/practice';
-import { trackEvent } from '../lib/analytics';
 import { sitePath } from '../lib/site-path';
 
 const roadmaps = [
@@ -46,7 +45,6 @@ const dailyQuestion = practiceQuestions.find((question) => question.moduleId ===
 export default function Home() {
   const [secondsLeft, setSecondsLeft] = useState(() => secondsForPractice(dailyQuestion.time));
   const [timerRunning, setTimerRunning] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
   const [activeCategory, setActiveCategory] = useState<(typeof practiceCategories)[number]>('全部');
   const [selectedId, setSelectedId] = useState(1);
   const [contextLength, setContextLength] = useState(4096);
@@ -54,7 +52,6 @@ export default function Home() {
   const [kvHeads, setKvHeads] = useState(8);
   const [notes, setNotes] = useState('');
   const [noteStatus, setNoteStatus] = useState('仅保存在此设备');
-  const dailyPracticeStarted = useRef(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem('llm-interview-lab-notes');
@@ -100,13 +97,7 @@ export default function Home() {
     if (secondsLeft === 0) {
       setSecondsLeft(secondsForPractice(dailyQuestion.time));
       setTimerRunning(true);
-      dailyPracticeStarted.current = true;
-      trackEvent('practice_start', { surface: 'home', module_id: dailyQuestion.moduleId, question_id: dailyQuestion.id });
       return;
-    }
-    if (!timerRunning && !dailyPracticeStarted.current) {
-      dailyPracticeStarted.current = true;
-      trackEvent('practice_start', { surface: 'home', module_id: dailyQuestion.moduleId, question_id: dailyQuestion.id });
     }
     setTimerRunning((running) => !running);
   };
@@ -140,7 +131,7 @@ export default function Home() {
         </div>
 
         <div className="practice-shell" id="practice">
-          <div className="shell-topline"><span>DAILY PRACTICE</span><span>09 / 14</span></div>
+          <div className="shell-topline"><span>DAILY PRACTICE</span><span>{dailyQuestion.id.toString().padStart(2, '0')} / {practiceQuestions.length}</span></div>
           <div className="practice-card">
             <div className="card-meta"><span className="topic-pill">{dailyQuestion.category}</span><span>建议 {dailyQuestion.time}</span></div>
             <p className="question-label">INTERVIEW QUESTION</p>
@@ -148,13 +139,12 @@ export default function Home() {
             <div className="prompt-hint"><span className="hint-index">提示</span><p>{dailyQuestion.hint}</p></div>
             <div className="card-actions">
               <button type="button" onClick={handleTimer} aria-live="polite">
-                {secondsLeft === 0 ? '重新练习' : timerRunning ? '暂停计时' : '开始作答'}
+                {secondsLeft === 0 ? '重新预演' : timerRunning ? '暂停计时' : '开始口头预演'}
                 <span>{formatTimer(secondsLeft)}</span>
               </button>
-              <button className={`icon-button ${bookmarked ? 'is-bookmarked' : ''}`} type="button" aria-label={bookmarked ? '取消收藏' : '收藏题目'} onClick={() => setBookmarked((value) => !value)}>{bookmarked ? '✓' : '＋'}</button>
             </div>
           </div>
-          <div className="shell-footer"><span><i className="status-dot" /> 今日建议：完成 1 个模块闭环</span><a href={sitePath('/practice/?module=inference')}>进入推理模块 →</a></div>
+          <div className="shell-footer"><span><i className="status-dot" /> 这里只做口头预演；保存答案请进入完整作答</span><a href={sitePath(`/practice/?module=${dailyQuestion.moduleId}&question=${dailyQuestion.id}`)}>进入完整作答 →</a></div>
         </div>
       </section>
 
@@ -222,7 +212,7 @@ export default function Home() {
               <h4>必答点</h4>
               <ul>{selectedQuestion.points.map((point) => <li key={point}>{point}</li>)}</ul>
               <div className="followup-box"><span>FOLLOW-UP</span><p>{selectedQuestion.followup}</p></div>
-              <a className="answer-module-link" href={sitePath(`/practice/?module=${selectedQuestion.moduleId}`)}>进入对应模块闭环 <span>→</span></a>
+              <a className="answer-module-link" href={sitePath(`/practice/?module=${selectedQuestion.moduleId}&question=${selectedQuestion.id}`)}>进入对应题目训练 <span>→</span></a>
             </article>
           </div>
         </div>

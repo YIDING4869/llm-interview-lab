@@ -18,15 +18,31 @@ const stepDefinitions = [
 
 type StepId = (typeof stepDefinitions)[number]['id'];
 type SavedAttempt = { answer: string; savedAt: string };
+type QuestionProgress = {
+  answerDraft?: string;
+  attempts?: SavedAttempt[];
+  rubric?: boolean[];
+};
 type ProgressRecord = Record<string, {
   steps?: Partial<Record<StepId, boolean>>;
   note?: string;
+  questions?: Record<string, QuestionProgress>;
+  // 兼容第一版按模块保存的首题记录。
   answerDraft?: string;
   attempts?: SavedAttempt[];
   rubric?: boolean[];
 }>;
+type LearningBackup = {
+  version: 2;
+  exportedAt: string;
+  practiceProgress: ProgressRecord;
+  lessonProgress: Record<string, boolean>;
+  homeNotes: string;
+};
 
 const storageKey = 'llm-interview-lab-progress-v1';
+const lessonStorageKey = 'llm-interview-lab-lesson-progress-v1';
+const homeNotesKey = 'llm-interview-lab-notes';
 
 function secondsForQuestion(time: string) {
   const minutes = time.match(/(\d+)\s*分钟/);
@@ -51,6 +67,7 @@ function downloadText(filename: string, content: string, type: string) {
 export function PracticeWorkspace() {
   const [activeRouteId, setActiveRouteId] = useState(entryRoutes[0].id);
   const [activeModuleId, setActiveModuleId] = useState(entryRoutes[0].sequence[0]);
+  const [activeQuestionId, setActiveQuestionId] = useState(practiceQuestions[0].id);
   const [progress, setProgress] = useState<ProgressRecord>({});
   const [hydrated, setHydrated] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(90);
@@ -66,6 +83,8 @@ export function PracticeWorkspace() {
     const params = new URLSearchParams(window.location.search);
     const requestedModule = params.get('module');
     const requestedRoute = params.get('route');
+    const requestedQuestionId = Number(params.get('question'));
+    const requestedQuestion = practiceQuestions.find((item) => item.id === requestedQuestionId);
     queueMicrotask(() => {
       if (saved) {
         try {
@@ -76,14 +95,23 @@ export function PracticeWorkspace() {
       }
 
       setQuickstart(params.get('quickstart') === '1');
-      if (requestedModule && knowledgeModules.some((module) => module.id === requestedModule)) {
+      if (requestedQuestion) {
+        setActiveQuestionId(requestedQuestion.id);
+        setActiveModuleId(requestedQuestion.moduleId);
+        const matchingRoute = entryRoutes.find((route) => route.sequence.includes(requestedQuestion.moduleId));
+        if (matchingRoute) setActiveRouteId(matchingRoute.id);
+      } else if (requestedModule && knowledgeModules.some((module) => module.id === requestedModule)) {
         setActiveModuleId(requestedModule);
+        const firstQuestion = practiceQuestions.find((item) => item.moduleId === requestedModule);
+        if (firstQuestion) setActiveQuestionId(firstQuestion.id);
         const matchingRoute = entryRoutes.find((route) => route.sequence.includes(requestedModule));
         if (matchingRoute) setActiveRouteId(matchingRoute.id);
       } else if (requestedRoute && entryRoutes.some((route) => route.id === requestedRoute)) {
         const route = entryRoutes.find((item) => item.id === requestedRoute) ?? entryRoutes[0];
         setActiveRouteId(route.id);
         setActiveModuleId(route.sequence[0]);
+        const firstQuestion = practiceQuestions.find((item) => item.moduleId === route.sequence[0]);
+        if (firstQuestion) setActiveQuestionId(firstQuestion.id);
       }
       setHydrated(true);
     });
@@ -96,14 +124,23 @@ export function PracticeWorkspace() {
   const activeRoute = entryRoutes.find((route) => route.id === activeRouteId) ?? entryRoutes[0];
   const routeModules = activeRoute.sequence.map((id) => knowledgeModules.find((module) => module.id === id)).filter(Boolean);
   const activeModule = knowledgeModules.find((module) => module.id === activeModuleId) ?? knowledgeModules[0];
-  const question = practiceQuestions.find((item) => item.moduleId === activeModule.id) ?? practiceQuestions[0];
+  const moduleQuestions = practiceQuestions.filter((item) => item.moduleId === activeModule.id);
+  const question = moduleQuestions.find((item) => item.id === activeQuestionId) ?? moduleQuestions[0] ?? practiceQuestions[0];
   const moduleResources = learningResources.filter((resource) => question.resourceIds.includes(resource.id));
   const moduleLessons = lessonsForModule(activeModule.id);
   const activeSteps = progress[activeModule.id]?.steps ?? {};
   const finishedSteps = stepDefinitions.filter((step) => activeSteps[step.id]).length;
-  const answerDraft = progress[activeModule.id]?.answerDraft ?? '';
-  const attempts = progress[activeModule.id]?.attempts ?? [];
-  const rubric = progress[activeModule.id]?.rubric ?? [];
+  const moduleProgress = progress[activeModule.id];
+  const isPrimaryQuestion = moduleQuestions[0]?.id === question.id;
+  const legacyQuestionProgress: QuestionProgress = isPrimaryQuestion ? {
+    answerDraft: moduleProgress?.answerDraft,
+    attempts: moduleProgress?.attempts,
+    rubric: moduleProgress?.rubric,
+  } : {};
+  const questionProgress = moduleProgress?.questions?.[String(question.id)] ?? legacyQuestionProgress;
+  const answerDraft = questionProgress.answerDraft ?? '';
+  const attempts = questionProgress.attempts ?? [];
+  const rubric = questionProgress.rubric ?? [];
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -150,6 +187,11 @@ export function PracticeWorkspace() {
       const nextModuleId = nextIncomplete ?? route.sequence[0];
       setActiveModuleId(nextModuleId);
       url.searchParams.set('module', nextModuleId);
+      const firstQuestion = practiceQuestions.find((item) => item.moduleId === nextModuleId);
+      if (firstQuestion) {
+        setActiveQuestionId(firstQuestion.id);
+        url.searchParams.set('question', String(firstQuestion.id));
+      }
     }
     window.history.replaceState({}, '', url);
   };
@@ -158,6 +200,19 @@ export function PracticeWorkspace() {
     setActiveModuleId(moduleId);
     const url = new URL(window.location.href);
     url.searchParams.set('module', moduleId);
+    const firstQuestion = practiceQuestions.find((item) => item.moduleId === moduleId);
+    if (firstQuestion) {
+      setActiveQuestionId(firstQuestion.id);
+      url.searchParams.set('question', String(firstQuestion.id));
+    }
+    window.history.replaceState({}, '', url);
+  };
+
+  const selectQuestion = (questionId: number) => {
+    setActiveQuestionId(questionId);
+    const url = new URL(window.location.href);
+    url.searchParams.set('module', activeModule.id);
+    url.searchParams.set('question', String(questionId));
     window.history.replaceState({}, '', url);
   };
 
@@ -184,7 +239,16 @@ export function PracticeWorkspace() {
   const setAnswerDraft = (answerDraft: string) => {
     setProgress((current) => ({
       ...current,
-      [activeModule.id]: { ...current[activeModule.id], answerDraft },
+      [activeModule.id]: {
+        ...current[activeModule.id],
+        questions: {
+          ...current[activeModule.id]?.questions,
+          [String(question.id)]: {
+            ...(current[activeModule.id]?.questions?.[String(question.id)] ?? legacyQuestionProgress),
+            answerDraft,
+          },
+        },
+      },
     }));
   };
 
@@ -197,7 +261,13 @@ export function PracticeWorkspace() {
       [activeModule.id]: {
         ...current[activeModule.id],
         steps: { ...current[activeModule.id]?.steps, answer: true },
-        attempts: [...(current[activeModule.id]?.attempts ?? []), attempt].slice(-8),
+        questions: {
+          ...current[activeModule.id]?.questions,
+          [String(question.id)]: {
+            ...(current[activeModule.id]?.questions?.[String(question.id)] ?? legacyQuestionProgress),
+            attempts: [...(current[activeModule.id]?.questions?.[String(question.id)]?.attempts ?? legacyQuestionProgress.attempts ?? []), attempt].slice(-8),
+          },
+        },
       },
     }));
     setAnswerStatus(`已保存第 ${attempts.length + 1} 次作答，可以对照必答点复盘`);
@@ -233,25 +303,55 @@ export function PracticeWorkspace() {
 
   const toggleRubric = (index: number) => {
     setProgress((current) => {
-      const nextRubric = [...(current[activeModule.id]?.rubric ?? [])];
+      const currentQuestion = current[activeModule.id]?.questions?.[String(question.id)] ?? legacyQuestionProgress;
+      const nextRubric = [...(currentQuestion.rubric ?? [])];
       nextRubric[index] = !nextRubric[index];
-      return { ...current, [activeModule.id]: { ...current[activeModule.id], rubric: nextRubric } };
+      return {
+        ...current,
+        [activeModule.id]: {
+          ...current[activeModule.id],
+          questions: {
+            ...current[activeModule.id]?.questions,
+            [String(question.id)]: { ...currentQuestion, rubric: nextRubric },
+          },
+        },
+      };
     });
   };
 
   const exportProgress = (format: 'json' | 'md') => {
+    let lessonProgress: Record<string, boolean> = {};
+    try {
+      lessonProgress = JSON.parse(window.localStorage.getItem(lessonStorageKey) ?? '{}') as Record<string, boolean>;
+    } catch {
+      lessonProgress = {};
+    }
+    const homeNotes = window.localStorage.getItem(homeNotesKey) ?? '';
+
     if (format === 'json') {
-      downloadText('llm-interview-lab-progress.json', JSON.stringify(progress, null, 2), 'application/json');
+      const backup: LearningBackup = {
+        version: 2,
+        exportedAt: new Date().toISOString(),
+        practiceProgress: progress,
+        lessonProgress,
+        homeNotes,
+      };
+      downloadText('llm-interview-lab-progress.json', JSON.stringify(backup, null, 2), 'application/json');
     } else {
       const markdown = knowledgeModules.map((module) => {
         const item = progress[module.id];
         const completed = stepDefinitions.filter((step) => item?.steps?.[step.id]).map((step) => step.label).join('、') || '无';
-        const latestAnswer = item?.attempts?.at(-1)?.answer;
-        return `## ${module.order} ${module.title}\n\n- 已完成：${completed}\n\n### 最近作答\n\n${latestAnswer || '暂无'}\n\n### 复盘\n\n${item?.note || '暂无'}`;
+        const questionNotes = practiceQuestions.filter((questionItem) => questionItem.moduleId === module.id).map((questionItem, index) => {
+          const storedQuestion = item?.questions?.[String(questionItem.id)];
+          const latestAnswer = storedQuestion?.attempts?.at(-1)?.answer ?? (index === 0 ? item?.attempts?.at(-1)?.answer : undefined);
+          return `#### Q${questionItem.id.toString().padStart(2, '0')} ${questionItem.title}\n\n${latestAnswer || '暂无作答'}`;
+        }).join('\n\n');
+        return `## ${module.order} ${module.title}\n\n- 已完成：${completed}\n\n### 最近作答\n\n${questionNotes}\n\n### 复盘\n\n${item?.note || '暂无'}`;
       }).join('\n\n---\n\n');
-      downloadText('llm-interview-lab-notes.md', `# LLM Interview Lab 学习记录\n\n${markdown}\n`, 'text/markdown');
+      const finishedLessons = Object.values(lessonProgress).filter(Boolean).length;
+      downloadText('llm-interview-lab-notes.md', `# LLM Interview Lab 学习记录\n\n- 已完成站内课：${finishedLessons}\n\n## 首页随手记\n\n${homeNotes || '暂无'}\n\n---\n\n${markdown}\n`, 'text/markdown');
     }
-    setTransferStatus(`已导出 ${format === 'json' ? '可恢复备份' : 'Markdown 笔记'}`);
+    setTransferStatus(`已导出 ${format === 'json' ? '完整可恢复备份' : '完整 Markdown 笔记'}`);
   };
 
   const importProgress = async (file?: File) => {
@@ -259,8 +359,17 @@ export function PracticeWorkspace() {
     try {
       const parsed = JSON.parse(await file.text());
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
-      setProgress(parsed as ProgressRecord);
-      setTransferStatus('已恢复学习进度和 Notes');
+      if ('version' in parsed && parsed.version === 2 && 'practiceProgress' in parsed) {
+        const backup = parsed as LearningBackup;
+        if (!backup.practiceProgress || typeof backup.practiceProgress !== 'object') throw new Error('invalid');
+        setProgress(backup.practiceProgress);
+        window.localStorage.setItem(lessonStorageKey, JSON.stringify(backup.lessonProgress ?? {}));
+        window.localStorage.setItem(homeNotesKey, backup.homeNotes ?? '');
+        setTransferStatus('已恢复课程、练习进度和全部 Notes');
+      } else {
+        setProgress(parsed as ProgressRecord);
+        setTransferStatus('已恢复旧版模块进度；课程与首页 Notes 不在旧备份中');
+      }
     } catch {
       setTransferStatus('无法导入：请选择本站导出的 JSON 备份');
     }
@@ -288,9 +397,9 @@ export function PracticeWorkspace() {
             <div className="loop-progress-track"><span style={{ width: `${routeProgress.percent}%` }} /></div>
             <p><b>{routeProgress.completeModules}</b> / {activeRoute.sequence.length} 个模块完成全部四步</p>
             <div className="progress-transfer-actions">
-              <button type="button" onClick={() => exportProgress('md')}>导出 Notes.md</button>
-              <button type="button" onClick={() => exportProgress('json')}>备份进度</button>
-              <button type="button" onClick={() => importRef.current?.click()}>恢复进度</button>
+              <button type="button" onClick={() => exportProgress('md')}>导出全部 Notes</button>
+              <button type="button" onClick={() => exportProgress('json')}>备份全部进度</button>
+              <button type="button" onClick={() => importRef.current?.click()}>恢复完整备份</button>
               <input ref={importRef} type="file" accept="application/json,.json" onChange={(event) => void importProgress(event.target.files?.[0])} />
             </div>
             {transferStatus && <small className="progress-transfer-status" aria-live="polite">{transferStatus}</small>}
@@ -341,6 +450,7 @@ export function PracticeWorkspace() {
 
           <section className="loop-panel answer-practice-panel" id="answer">
             <div className="loop-panel-label"><span>{quickstart ? '01' : '02'}</span><strong>{quickstart ? '快速作答 / QUICK ANSWER' : '作答 / ANSWER'}</strong></div>
+            {moduleQuestions.length > 1 && <div className="module-question-switcher"><div><span>MODULE QUESTION SET</span><strong>{moduleQuestions.length} 道递进题</strong></div><div>{moduleQuestions.map((item, index) => <button className={item.id === question.id ? 'active' : ''} type="button" key={item.id} onClick={() => selectQuestion(item.id)} aria-pressed={item.id === question.id}><span>{String(index + 1).padStart(2, '0')}</span><strong>{item.title}</strong><small>{item.difficulty} · {item.time}</small></button>)}</div></div>}
             <div className="checkpoint-question"><div><span>{question.category} · {question.difficulty}</span><b>{question.time}</b></div><h3>{question.title}</h3><p><strong>提示：</strong>{question.hint}</p></div>
             <div className="answer-recorder">
               <div className="answer-recorder-head"><span>YOUR ANSWER</span><strong>{formatCountdown(secondsLeft)}</strong></div>
