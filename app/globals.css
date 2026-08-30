@@ -43,7 +43,7 @@ main {
 }
 .brand { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 800; letter-spacing: -.02em; }
 .brand-mark { width: 31px; height: 31px; display: grid; place-items: center; background: var(--ink); color: white; border-radius: 8px; font: 800 15px/1 ui-monospace, monospace; transform: rotate(-4deg); }
-.nav-links { display: flex; gap: clamp(12px, 1.45vw, 24px); font-size: 12px; font-weight: 650; color: #4f5870; }
+.nav-links { display: flex; gap: clamp(9px, 1.1vw, 18px); font-size: 11px; font-weight: 650; color: #4f5870; }
 .nav-links a:hover { color: var(--blue); }
 .nav-links a.is-active { color: var(--blue); }
 .nav-cta { justify-self: end; border: 1px solid var(--ink); border-radius: 999px; padding: 10px 16px; font-size: 13px; font-weight: 750; background: var(--paper); }
@@ -842,6 +842,119 @@ main {
 .interview-method-note .section-kicker { color: var(--acid); }
 .interview-method-note h2 { margin: 0; font-size: clamp(34px, 4vw, 55px); line-height: 1.08; letter-spacing: -.05em; }
 .interview-method-note > p { margin: 0; color: #dce3ff; font-size: 13px; line-height: 1.85; }
+
+.countdown-page { min-height: 100vh; background: var(--paper); }
+.countdown-hero { width: min(100%, 1460px); margin: 0 auto; padding: 34px clamp(24px, 6vw, 94px) 74px; }
+.countdown-hero > div { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, .55fr); gap: 70px; align-items: end; margin-top: 72px; }
+.countdown-hero h1 { margin: 23px 0 0; font-size: clamp(45px, 5.3vw, 74px); line-height: 1.05; letter-spacing: -.055em; }
+.countdown-hero h1 em { color: var(--blue); font-style: normal; }
+.countdown-hero > div > p:last-child { margin: 0 0 6px; color: #6f798d; font-size: 12px; line-height: 1.8; }
+.countdown-setup { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 42px 0 92px; border-top: 1px solid var(--line); }
+.countdown-setup > header span { color: var(--blue); font: 850 9px/1 ui-monospace, monospace; letter-spacing: .1em; }
+.countdown-setup > header h2 { margin: 10px 0 0; font-size: 28px; letter-spacing: -.035em; }
+.countdown-form-grid { display: grid; grid-template-columns: 1.2fr .8fr 1fr; gap: 9px; margin-top: 24px; }
+.countdown-form-grid label, .countdown-form-grid fieldset { min-width: 0; margin: 0; padding: 17px; border: 1px solid #d4d9e2; border-radius: 10px; background: white; }
+.countdown-form-grid label > span, .countdown-form-grid legend { display: block; margin-bottom: 11px; color: #6c778b; font-size: 9px; font-weight: 800; }
+.countdown-form-grid select, .countdown-form-grid input { width: 100%; height: 42px; padding: 0 11px; border: 1px solid #cbd1dd; border-radius: 7px; color: var(--ink); background: #fafbfc; font-family: inherit; font-size: 11px; }
+.countdown-form-grid fieldset { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.countdown-form-grid legend { grid-column: 1 / 4; padding: 0; }
+.countdown-form-grid fieldset button { min-height: 42px; border: 1px solid #cbd1dd; border-radius: 7px; color: #687388; background: #fafbfc; font-family: inherit; font-size: 13px; font-weight: 850; cursor: pointer; }
+.countdown-form-grid fieldset button span { display: block; margin-top: 3px; font-size: 7px; }
+.countdown-form-grid fieldset button.active { color: white; border-color: var(--blue); background: var(--blue); }
+.countdown-save-bar { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 10px; padding: 22px 24px; border-radius: 12px; color: white; background: var(--ink); }
+.countdown-save-bar span, .countdown-save-bar strong, .countdown-save-bar small { display: block; }
+.countdown-save-bar > div > span { color: var(--acid); font: 850 9px/1 ui-monospace, monospace; letter-spacing: .08em; }
+.countdown-save-bar strong { margin-top: 8px; font-size: 17px; }
+.countdown-save-bar small { margin-top: 6px; color: #adb7ca; font-size: 9px; }
+.countdown-save-bar button { min-height: 46px; padding: 0 18px; border: 0; border-radius: 8px; color: var(--ink); background: var(--acid); font-family: inherit; font-size: 10px; font-weight: 850; cursor: pointer; }
+.countdown-save-bar button span { display: inline; margin-left: 18px; color: var(--blue); }
+.countdown-save-bar button:disabled { opacity: .45; cursor: not-allowed; }
+.countdown-preview-note { margin: 13px 0 0; color: #747f92; font-size: 9px; text-align: center; }
+.countdown-overview { width: min(1180px, calc(100% - 48px)); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: -48px auto 0; overflow: hidden; border: 1px solid var(--ink); border-radius: 13px; color: white; background: var(--ink); box-shadow: 8px 8px 0 var(--acid); }
+.countdown-overview > div { min-width: 0; padding: 23px; border-right: 1px solid #354057; }
+.countdown-overview > div:last-child { border-right: 0; }
+.countdown-overview span, .countdown-overview strong, .countdown-overview p { display: block; }
+.countdown-overview span { color: #aeb8cc; font: 800 9px/1 ui-monospace, monospace; letter-spacing: .08em; }
+.countdown-overview strong { min-height: 34px; margin-top: 13px; color: var(--acid); font-size: clamp(22px, 2.4vw, 31px); line-height: 1.08; letter-spacing: -.035em; }
+.countdown-overview strong b { font-size: 11px; }
+.countdown-overview p { margin: 9px 0 0; color: #c8d0df; font-size: 9px; line-height: 1.6; }
+.countdown-plan-shell { width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 88px 0 110px; }
+.countdown-section-head { display: grid; grid-template-columns: 1fr .7fr; gap: 70px; align-items: end; }
+.countdown-section-head > div > span { color: var(--blue); font: 850 9px/1 ui-monospace, monospace; letter-spacing: .1em; }
+.countdown-section-head h2 { margin: 11px 0 0; font-size: clamp(29px, 3.3vw, 43px); line-height: 1.1; letter-spacing: -.045em; }
+.countdown-section-head > p { margin: 0; color: #6c778b; font-size: 11px; line-height: 1.8; }
+.countdown-phase-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 25px; overflow: hidden; border: 1px solid #cfd4de; border-radius: 13px; background: white; }
+.countdown-phase-grid.sprint { grid-template-columns: 1fr; }
+.countdown-phase-grid article { min-height: 195px; display: flex; flex-direction: column; padding: 21px; border-right: 1px solid #d9dde5; }
+.countdown-phase-grid article:last-child { border-right: 0; }
+.countdown-phase-grid article > span { color: #9ca5b5; font: 850 10px/1 ui-monospace, monospace; }
+.countdown-phase-grid article > strong { margin-top: 30px; font-size: 18px; letter-spacing: -.025em; }
+.countdown-phase-grid article > p { margin: 10px 0 22px; color: #6d788d; font-size: 10px; line-height: 1.7; }
+.countdown-phase-grid article > small { margin-top: auto; color: #8b94a6; font-size: 8px; font-weight: 800; }
+.countdown-phase-grid article.active { color: white; background: var(--blue); box-shadow: inset 0 5px 0 var(--acid); }
+.countdown-phase-grid article.active > span, .countdown-phase-grid article.active > small { color: var(--acid); }
+.countdown-phase-grid article.active > p { color: #dce3ff; }
+.countdown-section-head.week { margin-top: 92px; }
+.countdown-week-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 25px; }
+.countdown-week-grid > article { overflow: hidden; border: 1px solid #d1d6df; border-radius: 12px; background: white; box-shadow: 0 9px 28px rgba(17,26,53,.035); }
+.countdown-week-grid > article.today { border-color: var(--blue); box-shadow: inset 0 4px 0 var(--blue), 0 12px 30px rgba(43,73,203,.07); }
+.countdown-week-grid > article > header { display: flex; justify-content: space-between; gap: 18px; padding: 20px 21px 17px; border-bottom: 1px solid #e1e4ea; }
+.countdown-week-grid > article > header div:last-child { text-align: right; }
+.countdown-week-grid > article > header span, .countdown-week-grid > article > header strong, .countdown-week-grid > article > header b, .countdown-week-grid > article > header small { display: block; }
+.countdown-week-grid > article > header span { color: var(--blue); font: 850 9px/1 ui-monospace, monospace; letter-spacing: .08em; }
+.countdown-week-grid > article > header strong { margin-top: 7px; font-size: 15px; }
+.countdown-week-grid > article > header b { color: #59657b; font-size: 10px; }
+.countdown-week-grid > article > header small { margin-top: 8px; color: #929bad; font: 800 9px/1 ui-monospace, monospace; }
+.countdown-week-grid ol { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.countdown-week-grid li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; align-items: start; padding: 15px 20px; border-bottom: 1px solid #eceef2; }
+.countdown-week-grid li:last-child { border-bottom: 0; }
+.countdown-week-grid li > button { width: 22px; height: 22px; display: grid; place-items: center; margin-top: 2px; padding: 0; border: 1px solid #aeb7c7; border-radius: 50%; color: white; background: white; font: 850 11px/1 ui-monospace, monospace; cursor: pointer; }
+.countdown-week-grid li > a { min-width: 0; color: var(--ink); }
+.countdown-week-grid li > a span, .countdown-week-grid li > a strong, .countdown-week-grid li > a small { display: block; }
+.countdown-week-grid li > a span { color: var(--blue); font: 850 8px/1 ui-monospace, monospace; letter-spacing: .08em; }
+.countdown-week-grid li > a strong { margin-top: 6px; font-size: 11px; line-height: 1.45; }
+.countdown-week-grid li > a small { margin-top: 5px; color: #7a8497; font-size: 9px; line-height: 1.55; }
+.countdown-week-grid li.done { background: #f5f7f4; }
+.countdown-week-grid li.done > button { border-color: #708021; background: #708021; }
+.countdown-week-grid li.done > a strong { color: #777f8e; text-decoration: line-through; }
+.countdown-plan-note { display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; margin-top: 12px; padding: 21px 23px; border-radius: 11px; color: white; background: var(--ink); }
+.countdown-plan-note > span { color: var(--acid); font: 850 9px/1 ui-monospace, monospace; letter-spacing: .09em; }
+.countdown-plan-note > p { margin: 0; color: #bdc6d7; font-size: 9px; line-height: 1.7; }
+.countdown-plan-note > a { color: var(--acid); font-size: 9px; font-weight: 850; white-space: nowrap; }
+
+@media (max-width: 800px) {
+  .countdown-hero > div, .countdown-form-grid { grid-template-columns: 1fr; }
+  .countdown-hero > div { gap: 28px; }
+  .countdown-overview, .countdown-phase-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .countdown-phase-grid.sprint { grid-template-columns: 1fr; }
+  .countdown-overview > div:nth-child(2), .countdown-phase-grid article:nth-child(2) { border-right: 0; }
+  .countdown-overview > div:nth-child(-n+2), .countdown-phase-grid article:nth-child(-n+2) { border-bottom: 1px solid #354057; }
+  .countdown-phase-grid article:nth-child(-n+2) { border-bottom-color: #d9dde5; }
+  .countdown-section-head { grid-template-columns: 1fr; gap: 18px; }
+  .countdown-week-grid { grid-template-columns: 1fr; }
+  .countdown-plan-note { grid-template-columns: 1fr; gap: 11px; }
+}
+
+@media (max-width: 580px) {
+  .countdown-hero { padding: 28px 18px 56px; }
+  .countdown-hero > div { margin-top: 44px; }
+  .countdown-hero h1 { font-size: 40px; }
+  .countdown-setup { width: calc(100% - 36px); padding: 38px 0 72px; }
+  .countdown-save-bar { align-items: stretch; flex-direction: column; padding: 18px; }
+  .countdown-save-bar button { width: 100%; }
+  .countdown-overview, .countdown-plan-shell { width: calc(100% - 36px); }
+  .countdown-overview { grid-template-columns: 1fr; margin-top: -40px; }
+  .countdown-overview > div { border-right: 0; border-bottom: 1px solid #354057; }
+  .countdown-overview > div:nth-child(3) { border-bottom: 1px solid #354057; }
+  .countdown-overview > div:last-child { border-bottom: 0; }
+  .countdown-plan-shell { padding: 74px 0 86px; }
+  .countdown-phase-grid { grid-template-columns: 1fr; }
+  .countdown-phase-grid article { min-height: 170px; border-right: 0; border-bottom: 1px solid #d9dde5; }
+  .countdown-phase-grid article:last-child { border-bottom: 0; }
+  .countdown-section-head.week { margin-top: 72px; }
+  .countdown-week-grid > article > header { padding: 18px; }
+  .countdown-week-grid li { padding: 14px 17px; }
+}
 
 .mock-page { min-height: 100vh; background: var(--paper); }
 .mock-intro { width: min(100%, 1460px); margin: 0 auto; padding: 38px clamp(24px, 6vw, 94px) 72px; }

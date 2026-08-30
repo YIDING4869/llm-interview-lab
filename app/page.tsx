@@ -5,6 +5,7 @@ import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
 import { entryRoutes, knowledgeModules } from '../data/curriculum';
 import { interviewRecords } from '../data/interviews';
+import { daysBetweenIsoDates, todayLocalIsoDate } from '../data/interview-plan';
 import { foundationLessons } from '../data/lessons';
 import { mockInterviewTracks } from '../data/mock-interviews';
 import { practiceCategories, practiceQuestions } from '../data/practice';
@@ -124,6 +125,18 @@ export default function Home() {
           detail: '5 道主问题 · 5 道连续追问 · 本机复盘',
           href: '/mock/',
           badge: '5+5',
+        };
+      }
+    } else if (lastActivity?.type === 'plan') {
+      const track = mockInterviewTracks.find((item) => item.id === lastActivity.trackId);
+      if (track) {
+        const daysLeft = Math.max(daysBetweenIsoDates(todayLocalIsoDate(), lastActivity.targetDate), 0);
+        nextResumeCard = {
+          eyebrow: '继续面试冲刺计划',
+          title: `${track.title} · 倒计时 ${daysLeft} 天`,
+          detail: '打开今天的课程、单题或整场模拟任务',
+          href: '/plan/',
+          badge: `${daysLeft}D`,
         };
       }
     }

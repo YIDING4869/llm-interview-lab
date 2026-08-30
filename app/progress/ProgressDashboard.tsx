@@ -6,6 +6,7 @@ import { SiteHeader } from '../../components/SiteHeader';
 import { knowledgeModules } from '../../data/curriculum';
 import { guideForInterviewQuestion } from '../../data/interview-guides';
 import { interviewRecords } from '../../data/interviews';
+import { daysBetweenIsoDates, todayLocalIsoDate } from '../../data/interview-plan';
 import { foundationLessons, lessonsForModule } from '../../data/lessons';
 import { mockInterviewTracks } from '../../data/mock-interviews';
 import { practiceQuestions } from '../../data/practice';
@@ -222,6 +223,14 @@ export function ProgressDashboard() {
         nextTitle = unfinished ? track.title : recommendation ? recommendation.title : track.title;
         nextDetail = unfinished ? '继续未完成的整场模拟与连续追问。' : recommendation ? `${track.title}最近一场优先补“${recommendation.rubricTitle}”；先做单题热身，再进入轮换题单。` : '开始一场 5 道主问题与连续追问。';
         nextHref = '/mock/';
+      }
+    } else if (lastActivity?.type === 'plan') {
+      const track = mockInterviewTracks.find((item) => item.id === lastActivity.trackId);
+      if (track) {
+        const daysLeft = Math.max(daysBetweenIsoDates(todayLocalIsoDate(), lastActivity.targetDate), 0);
+        nextTitle = `${track.title} · 倒计时 ${daysLeft} 天`;
+        nextDetail = '继续今天的课程、单题或模拟任务；完成状态只保存在当前设备。';
+        nextHref = '/plan/';
       }
     }
 

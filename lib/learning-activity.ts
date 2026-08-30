@@ -4,13 +4,15 @@ export type LastLearningActivity =
   | { type: 'practice'; moduleId: string; questionId: number; updatedAt: string }
   | { type: 'lesson'; moduleId: string; lessonId: string; updatedAt: string }
   | { type: 'interview'; recordId: string; promptIndex: number; updatedAt: string }
-  | { type: 'mock'; trackId: string; updatedAt: string };
+  | { type: 'mock'; trackId: string; updatedAt: string }
+  | { type: 'plan'; trackId: string; targetDate: string; updatedAt: string };
 
 type ActivityInput =
   | Omit<Extract<LastLearningActivity, { type: 'practice' }>, 'updatedAt'>
   | Omit<Extract<LastLearningActivity, { type: 'lesson' }>, 'updatedAt'>
   | Omit<Extract<LastLearningActivity, { type: 'interview' }>, 'updatedAt'>
-  | Omit<Extract<LastLearningActivity, { type: 'mock' }>, 'updatedAt'>;
+  | Omit<Extract<LastLearningActivity, { type: 'mock' }>, 'updatedAt'>
+  | Omit<Extract<LastLearningActivity, { type: 'plan' }>, 'updatedAt'>;
 
 export function saveLastLearningActivity(activity: ActivityInput) {
   if (typeof window === 'undefined') return;
@@ -30,6 +32,7 @@ export function readLastLearningActivity(): LastLearningActivity | null {
     if (parsed.type === 'lesson' && typeof parsed.moduleId === 'string' && typeof parsed.lessonId === 'string') return parsed;
     if (parsed.type === 'interview' && typeof parsed.recordId === 'string' && typeof parsed.promptIndex === 'number') return parsed;
     if (parsed.type === 'mock' && typeof parsed.trackId === 'string') return parsed;
+    if (parsed.type === 'plan' && typeof parsed.trackId === 'string' && typeof parsed.targetDate === 'string') return parsed;
   } catch {
     window.localStorage.removeItem(lastLearningActivityKey);
   }

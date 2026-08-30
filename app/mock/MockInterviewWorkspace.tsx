@@ -58,6 +58,8 @@ export function MockInterviewWorkspace() {
 
   useEffect(() => {
     const saved = window.localStorage.getItem(mockInterviewStorageKey);
+    const requestedTrackId = new URLSearchParams(window.location.search).get('track');
+    const requestedTrack = mockInterviewTracks.find((track) => track.id === requestedTrackId);
     queueMicrotask(() => {
       if (saved) {
         try {
@@ -67,10 +69,15 @@ export function MockInterviewWorkspace() {
             setSelectedTrackId(parsed.active.trackId);
             setSecondsLeft(parsed.active.stage === 'followup' ? 60 : 90);
             setStatus(parsed.active.stage === 'report' ? '已载入最近一场本机复盘' : '已载入未完成模拟；计时保持暂停');
+          } else if (requestedTrack) {
+            setSelectedTrackId(requestedTrack.id);
           }
         } catch {
           window.localStorage.removeItem(mockInterviewStorageKey);
+          if (requestedTrack) setSelectedTrackId(requestedTrack.id);
         }
+      } else if (requestedTrack) {
+        setSelectedTrackId(requestedTrack.id);
       }
       setHydrated(true);
     });

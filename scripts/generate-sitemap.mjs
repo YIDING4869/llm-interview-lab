@@ -20,6 +20,7 @@ const routes = [
   { path: '/lessons/', frequency: 'monthly', priority: '0.9' },
   { path: '/practice/', frequency: 'weekly', priority: '0.9' },
   { path: '/progress/', frequency: 'monthly', priority: '0.5' },
+  { path: '/plan/', frequency: 'weekly', priority: '0.8' },
   { path: '/questions/', frequency: 'weekly', priority: '0.9' },
   { path: '/labs/', frequency: 'monthly', priority: '0.8' },
   { path: '/resources/', frequency: 'monthly', priority: '0.8' },
