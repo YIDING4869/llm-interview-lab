@@ -65,4 +65,10 @@ npm run dev
 
 站内会生成四个不包含答案正文的最小事件：`site_enter`、`practice_start`、`practice_complete`、`lab_open`。在未配置集中分析服务时，最近 100 条事件保存在浏览器的 `llm-interview-lab-events-v1` 本地记录中；配置 Google Analytics 后，同一批事件会自动上报。
 
+## 数据架构
+
+当前版本按“单设备自用”设计：课程、作答、模拟面试、冲刺计划和 Notes 保存在浏览器 `localStorage`，不需要账号或云端数据库。JSON 备份可在换设备、换浏览器或 GitHub Pages / Sites 两个不同网址之间迁移完整学习记录；不同网址的本地数据不会自动共享。
+
+未来若升级为多用户产品，数据库只是其中一部分，还需要登录身份、服务端接口、按用户隔离的数据访问规则，以及导出和删除个人数据的能力。届时可把当前本地数据结构作为同步对象，在保留离线草稿的同时，将确认保存的记录写入云端；现阶段不提前引入这些后端复杂度。
+
 本地构建可在 `.env` 中设置 `NEXT_PUBLIC_GA_MEASUREMENT_ID`。GitHub Pages 使用仓库变量 `GA_MEASUREMENT_ID`，无需把公开 Measurement ID 写进源码。

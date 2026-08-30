@@ -4,12 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { SiteFooter } from '../../components/SiteFooter';
 import { SiteHeader } from '../../components/SiteHeader';
 import { entryRoutes, knowledgeModules, learningResources } from '../../data/curriculum';
+import { interviewPlanStorageKey, type InterviewPlanSettings } from '../../data/interview-plan';
 import { interviewRecords } from '../../data/interviews';
 import { lessonsForModule } from '../../data/lessons';
+import { mockInterviewTracks } from '../../data/mock-interviews';
 import { practiceQuestions } from '../../data/practice';
 import { trackEvent } from '../../lib/analytics';
 import { interviewPracticeStorageKey, interviewQuestionKey, type InterviewPracticeProgress } from '../../lib/interview-practice';
-import { saveLastLearningActivity } from '../../lib/learning-activity';
+import { lastLearningActivityKey, saveLastLearningActivity, type LastLearningActivity } from '../../lib/learning-activity';
 import { emptyMockInterviewStorage, mockInterviewStorageKey, type MockInterviewStorage } from '../../lib/mock-interview';
 import { sitePath } from '../../lib/site-path';
 
@@ -37,13 +39,15 @@ type ProgressRecord = Record<string, {
   rubric?: boolean[];
 }>;
 type LearningBackup = {
-  version: 2 | 3 | 4;
+  version: 2 | 3 | 4 | 5;
   exportedAt: string;
   practiceProgress: ProgressRecord;
   lessonProgress: Record<string, boolean>;
   homeNotes: string;
   interviewPractice?: InterviewPracticeProgress;
   mockInterview?: MockInterviewStorage;
+  interviewPlan?: InterviewPlanSettings;
+  lastLearningActivity?: LastLearningActivity;
 };
 
 const storageKey = 'llm-interview-lab-progress-v1';
@@ -334,6 +338,8 @@ export function PracticeWorkspace() {
     let lessonProgress: Record<string, boolean> = {};
     let interviewPractice: InterviewPracticeProgress = {};
     let mockInterview = emptyMockInterviewStorage();
+    let interviewPlan: InterviewPlanSettings | undefined;
+    let lastLearningActivity: LastLearningActivity | undefined;
     try {
       lessonProgress = JSON.parse(window.localStorage.getItem(lessonStorageKey) ?? '{}') as Record<string, boolean>;
     } catch {
@@ -349,17 +355,31 @@ export function PracticeWorkspace() {
     } catch {
       mockInterview = emptyMockInterviewStorage();
     }
+    try {
+      const savedPlan = window.localStorage.getItem(interviewPlanStorageKey);
+      interviewPlan = savedPlan ? JSON.parse(savedPlan) as InterviewPlanSettings : undefined;
+    } catch {
+      interviewPlan = undefined;
+    }
+    try {
+      const savedActivity = window.localStorage.getItem(lastLearningActivityKey);
+      lastLearningActivity = savedActivity ? JSON.parse(savedActivity) as LastLearningActivity : undefined;
+    } catch {
+      lastLearningActivity = undefined;
+    }
     const homeNotes = window.localStorage.getItem(homeNotesKey) ?? '';
 
     if (format === 'json') {
       const backup: LearningBackup = {
-        version: 4,
+        version: 5,
         exportedAt: new Date().toISOString(),
         practiceProgress: progress,
         lessonProgress,
         homeNotes,
         interviewPractice,
         mockInterview,
+        interviewPlan,
+        lastLearningActivity,
       };
       downloadText('llm-interview-lab-progress.json', JSON.stringify(backup, null, 2), 'application/json');
     } else {
@@ -378,7 +398,9 @@ export function PracticeWorkspace() {
         return attempt ? `### ${record.company} · ${prompt}\n\n${attempt.answer}\n\n- 自评：${attempt.rubric.filter(Boolean).length}/4` : null;
       })).filter(Boolean).join('\n\n');
       const finishedLessons = Object.values(lessonProgress).filter(Boolean).length;
-      downloadText('llm-interview-lab-notes.md', `# LLM Interview Lab 学习记录\n\n- 已完成站内课：${finishedLessons}\n\n## 首页随手记\n\n${homeNotes || '暂无'}\n\n---\n\n${markdown}\n\n---\n\n## 国内面经真题作答\n\n${interviewMarkdown || '暂无作答'}\n`, 'text/markdown');
+      const planTrack = mockInterviewTracks.find((track) => track.id === interviewPlan?.trackId);
+      const planMarkdown = interviewPlan ? `- 目标方向：${planTrack?.role ?? interviewPlan.trackId}\n- 面试日期：${interviewPlan.targetDate}\n- 每日预算：${interviewPlan.dailyMinutes} 分钟\n- 已完成计划任务：${interviewPlan.completedTaskIds.length}` : '暂无冲刺计划';
+      downloadText('llm-interview-lab-notes.md', `# LLM Interview Lab 学习记录\n\n- 已完成站内课：${finishedLessons}\n\n## 当前冲刺计划\n\n${planMarkdown}\n\n## 首页随手记\n\n${homeNotes || '暂无'}\n\n---\n\n${markdown}\n\n---\n\n## 国内面经真题作答\n\n${interviewMarkdown || '暂无作答'}\n`, 'text/markdown');
     }
     setTransferStatus(`已导出 ${format === 'json' ? '完整可恢复备份' : '完整 Markdown 笔记'}`);
   };
@@ -388,15 +410,21 @@ export function PracticeWorkspace() {
     try {
       const parsed = JSON.parse(await file.text());
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('invalid');
-      if ('version' in parsed && (parsed.version === 2 || parsed.version === 3 || parsed.version === 4) && 'practiceProgress' in parsed) {
+      if ('version' in parsed && (parsed.version === 2 || parsed.version === 3 || parsed.version === 4 || parsed.version === 5) && 'practiceProgress' in parsed) {
         const backup = parsed as LearningBackup;
         if (!backup.practiceProgress || typeof backup.practiceProgress !== 'object') throw new Error('invalid');
         setProgress(backup.practiceProgress);
         window.localStorage.setItem(lessonStorageKey, JSON.stringify(backup.lessonProgress ?? {}));
         window.localStorage.setItem(homeNotesKey, backup.homeNotes ?? '');
         if (backup.version >= 3) window.localStorage.setItem(interviewPracticeStorageKey, JSON.stringify(backup.interviewPractice ?? {}));
-        if (backup.version === 4) window.localStorage.setItem(mockInterviewStorageKey, JSON.stringify(backup.mockInterview ?? emptyMockInterviewStorage()));
-        setTransferStatus(backup.version === 4 ? '已恢复课程、练习、面经真题、整场模拟和全部 Notes' : backup.version === 3 ? '已恢复旧备份；该版本不包含整场模拟记录' : '已恢复旧备份；该版本不包含面经真题与整场模拟记录');
+        if (backup.version >= 4) window.localStorage.setItem(mockInterviewStorageKey, JSON.stringify(backup.mockInterview ?? emptyMockInterviewStorage()));
+        if (backup.version === 5) {
+          if (backup.interviewPlan) window.localStorage.setItem(interviewPlanStorageKey, JSON.stringify(backup.interviewPlan));
+          else window.localStorage.removeItem(interviewPlanStorageKey);
+          if (backup.lastLearningActivity) window.localStorage.setItem(lastLearningActivityKey, JSON.stringify(backup.lastLearningActivity));
+          else window.localStorage.removeItem(lastLearningActivityKey);
+        }
+        setTransferStatus(backup.version === 5 ? '已恢复课程、练习、面经、整场模拟、冲刺计划和全部 Notes' : backup.version === 4 ? '已恢复旧备份；该版本不包含冲刺计划' : backup.version === 3 ? '已恢复旧备份；该版本不包含整场模拟与冲刺计划' : '已恢复旧备份；该版本不包含面经、整场模拟与冲刺计划');
       } else {
         setProgress(parsed as ProgressRecord);
         setTransferStatus('已恢复旧版模块进度；课程与首页 Notes 不在旧备份中');
@@ -433,6 +461,7 @@ export function PracticeWorkspace() {
               <button type="button" onClick={() => importRef.current?.click()}>恢复完整备份</button>
               <input ref={importRef} type="file" accept="application/json,.json" onChange={(event) => void importProgress(event.target.files?.[0])} />
             </div>
+            <p className="progress-transfer-note">不同网址和浏览器的数据不会自动互通；换设备或在 GitHub Pages / Sites 之间切换前，请先导出 JSON 备份。</p>
             {transferStatus && <small className="progress-transfer-status" aria-live="polite">{transferStatus}</small>}
           </div>
         </div>
